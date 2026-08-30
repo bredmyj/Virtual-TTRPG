@@ -1,0 +1,37 @@
+# Built copies. These are made by build.py from the source beside them, so
+# there is nothing in here that cannot be rebuilt - and they are far larger
+# than everything else put together. Put a finished build on a GitHub
+# Release instead of in the repository.
+dist/
+build/
+*.exe
+
+# Backups left behind while editing. The repository is the history now.
+*.bak
+*.bak[0-9]*
+
+# Python's own leftovers.
+__pycache__/
+*.py[cod]
+
+# Yours, and your players'. None of this belongs in a public repository:
+#   saves      - your campaigns
+#   profile    - your name, colour and picture
+#   faces      - pictures of everyone who has joined a session of yours
+#   cursors    - generated from your profile colour
+#   mods.json  - your settings, including any relay address
+saves/
+faces/
+cursors/
+profile.json
+profile.png
+mods.json
+selfcheck.txt
+
+# Fetched from Tailscale when somebody uses the "Set up Tailscale" button.
+# Their installer, not ours, and far bigger than everything else here.
+tailscale-setup.msi
+
+# Windows shortcuts point at wherever the folder happened to be, so they
+# are no use to anybody else. "Create Shortcut.bat" makes a fresh one.
+*.lnk
