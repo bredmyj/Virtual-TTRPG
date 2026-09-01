@@ -41,7 +41,7 @@ ALONGSIDE = ["plugins"]
 
 # Loose files that go with it: the icon is read at run time as well as being
 # stamped into the program, so the windows can wear it too.
-BESIDE = ["app.ico", "relay.py"]
+BESIDE = ["app.ico", "server.py", "servers.py", "paths.py", "Run Server.bat"]
 
 ICON = os.path.join(paths.APP_DIR, "app.ico")
 
@@ -150,14 +150,15 @@ another PC and everything comes with it.
 Playing with other people
 -------------------------
 On the same network - the same house wifi, or plugged into the same
-router - one person hosts and reads out the invite code; everyone else
-picks Join a Session and types it in.
+router - one person hosts with "Host on This Network" and reads out the
+invite code; everyone else picks "Join on This Network" and types it in.
 
-To play with people somewhere else, somebody has to run relay.py on a
-machine the internet can reach, and everyone dials out to that. Pick
-"People anywhere" when hosting and put its address in. Nothing has to
-be forwarded on anybody's router, because no connection ever comes in.
-Running the relay needs Python on that machine, not on yours.
+To play with people somewhere else, somebody runs server.py on a machine
+the internet can reach and forwards its port once. Everyone else picks
+"Connect to a Server", adds that address to their list under whatever
+name they like, and from then on it is two clicks: connect, then host a
+session or join one off the list. Running the server needs Python on
+that machine, not on yours.
 
 Everyone must be on the same version of the app - version %(version)s
 here. The version is shown on the main menu. If two people have

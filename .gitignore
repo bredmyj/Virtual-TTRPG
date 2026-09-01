@@ -19,18 +19,18 @@ __pycache__/
 #   profile    - your name, colour and picture
 #   faces      - pictures of everyone who has joined a session of yours
 #   cursors    - generated from your profile colour
-#   mods.json  - your settings, including any relay address
+#   mods.json    - your settings
+#   servers.json - the servers you have added, and any passwords with them
+#   server.json  - what your own server calls itself, and its password
 saves/
 faces/
 cursors/
 profile.json
 profile.png
 mods.json
+servers.json
+server.json
 selfcheck.txt
-
-# Fetched from Tailscale when somebody uses the "Set up Tailscale" button.
-# Their installer, not ours, and far bigger than everything else here.
-tailscale-setup.msi
 
 # Windows shortcuts point at wherever the folder happened to be, so they
 # are no use to anybody else. "Create Shortcut.bat" makes a fresh one.

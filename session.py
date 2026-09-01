@@ -26,6 +26,9 @@ class Session:
         self.profile = netplay.Profile.load()
         self.server = None
         self.client = None
+        self.hub = None             # the line to a server, when on one
+        self.on_server = []         # everybody on it, when there is one
+        self._server_seen = {}      # token -> name, as of our last look
         self.host_card = None
         self.error = None           # why hosting failed, if it did
         self.code = None
@@ -43,37 +46,38 @@ class Session:
             self._start_hosting()
         elif self.mode == "join":
             self.client = self.plan.get("client")
+            self.hub = self.plan.get("hub")
             if self.client is None:
                 self.mode = "solo"
             else:
                 self.host_card = self.client.host or {}
+        if self.hub is not None:
+            # Seed from what the lobby already knew. Without this the first
+            # list to arrive would be treated as the opening one and go by
+            # in silence, so whoever turned up next went unannounced.
+            self.on_server = list(self.hub.people)
+            self._server_seen = {c.get("token"): c.get("name") or "Someone"
+                                 for c in self.on_server}
         if self.mode != "solo":
             self._pump()
 
     def _start_hosting(self):
+        ready = self.plan.get("server")
+        if ready is not None:
+            # Opened on a server before we got here. It had to be, because
+            # only the server can say whether it will allow another session,
+            # and there is no sense starting a game to find out it will not.
+            self.server = ready
+            self.hub = self.plan.get("hub")
+            self.address = self.hub.name if self.hub is not None else ""
+            self.code = None            # nobody types anything to get in
+            self._roles[self.profile.token] = "GM"
+            return
+
         self.server = netplay.Server(self.profile,
                                      port=self.plan.get("port",
                                                         netplay.DEFAULT_PORT),
                                      campaign=self.plan.get("campaign", ""))
-        relay = self.plan.get("relay")
-        if relay:
-            # Over the internet: everybody dials out to a meeting point, so
-            # this machine never has to be reachable from outside.
-            why = self.server.open_relay(relay,
-                                         self.plan.get("relay_port")
-                                         or netplay.RELAY_PORT)
-            if why is not None:
-                self.error = why
-                self.server = None
-                self.mode = "solo"
-                return
-            self.address = relay
-            self.code = netplay.make_relay_code(
-                relay, self.plan.get("relay_port") or netplay.RELAY_PORT,
-                self.server.secret)
-            self._roles[self.profile.token] = "GM"
-            return
-
         self.address = self.plan.get("address") or netplay.local_addresses()[0]
         try:
             self.server.start("")       # every adapter: wifi and cable both
@@ -95,6 +99,12 @@ class Session:
         if self.client is not None:
             self.client.close()
             self.client = None
+        if self.hub is not None:
+            # Leaving the game leaves the server too. Staying on it with no
+            # window to show the lobby in would be a connection nobody can
+            # see and nobody can get rid of.
+            self.hub.close()
+            self.hub = None
 
     # ------------------------------------------------------------------
     # who is here
@@ -292,10 +302,47 @@ class Session:
                 except Exception:
                     break
                 self._handle(message)
+        if self.hub is not None:
+            for _ in range(50):
+                try:
+                    message = self.hub.inbox.get_nowait()
+                except Exception:
+                    break
+                self._from_server(message)
         try:
             self.app.after(PUMP_MS, self._tick)
         except Exception:
             self._pumping = False       # the window has gone
+
+    def _from_server(self, message):
+        """News about the server itself rather than about this game.
+
+        Worth a line either way: somebody turning up on the server is who
+        you might be playing with next, and the server going down is why
+        everything has stopped.
+        """
+        kind = message.get("kind")
+        if kind == "lobby":
+            people = message.get("people") or []
+            self.on_server = people
+            here = {c.get("token"): c.get("name") or "Someone"
+                    for c in people}
+            was, self._server_seen = self._server_seen, here
+            if not was:
+                # The first list is not news - it is everybody who was
+                # already there before we looked, and announcing all of them
+                # at the start of every session would be noise.
+                return
+            for token, name in here.items():
+                if token not in was and token != self.my_token:
+                    self.announce("%s is on the server." % name)
+            for token, name in was.items():
+                if token not in here and token != self.my_token:
+                    self.announce("%s left the server." % name)
+            self.emit_local("on_server", {"people": people})
+        elif kind == "hub_lost":
+            self.announce(message.get("why", "lost the server"),
+                          colour="fumble")
 
     def _handle(self, message):
         kind = message.get("kind")

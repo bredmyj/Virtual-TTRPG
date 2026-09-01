@@ -1,7 +1,7 @@
-# Bredmyj's VTT — v1.2.1
+# Bredmyj's VTT — v1.3.0
 
 A desktop virtual tabletop for solo and small-group RPGs. Dice, a dungeon
-map you can build and run live, a journal, and LAN or internet multiplayer —
+map you can build and run live, a journal, and LAN or server multiplayer —
 in one window, on your own machine, with no account and no subscription.
 
 Windows. Python 3 and Tkinter, plus Pillow for pictures. A packaged build
@@ -90,15 +90,14 @@ bars each.
 
 ### Multiplayer
 
-Three ways to host, chosen from the main menu:
+Two ways, chosen from the main menu by where the other people are:
 
 | | |
 |---|---|
-| **People on this network** | LAN. Nothing to set up. |
-| **People anywhere, straight from this computer** | Self-hosted, like a Minecraft server. Needs a forwarded port; the app checks whether you're reachable and says so. |
-| **People anywhere, through a relay** | Everyone dials out to a meeting point, so nobody needs to forward anything. One person runs **Run a Relay** from the main menu — see below. |
+| **Host on This Network** / **Join on This Network** | LAN. Nothing to set up: one person hosts and reads out an invite code. |
+| **Connect to a Server** | One person runs a server; everyone else adds its address once and picks a session off a list. |
 
-Joining takes an invite code. Once you're in:
+Once you're in:
 
 - A **roster** of faces along the bottom, with names and profile pictures.
 - **Live coloured cursors** — you can see where everyone is pointing, and
@@ -113,48 +112,38 @@ Joining takes an invite code. Once you're in:
 
 Everyone in a session is version-checked, so you'll be told if someone's on
 a different build rather than finding out the hard way. **Everyone at the
-table needs 1.2.1** — anyone on an older build will be turned away with a
+table needs 1.3.0** — anyone on an older build will be turned away with a
 message saying which version to get.
 
-### Getting connected
+### Servers
 
-Playing with someone in another house is the part that usually goes wrong,
-because home connections let you dial out and refuse calls coming in. Three
-things in this release deal with that.
+New in 1.3.0, and the way to play with anyone outside your own house.
 
-**Can people reach me?** — in the host window. It runs the checks that tell
-the failures apart, about ten seconds, and says which one it is:
+**`server.py`** is a plain console program — double-click **Run Server.bat**
+or run `python server.py`. One person leaves it running on a machine the
+others can reach, and it prints the addresses to hand round. Its name, port,
+password and identity live in `server.json` beside it, so a server somebody
+saved last week is still the same server this week.
 
-- whether anything can get out at all
-- what the internet sees you as
-- whether there's a router here you control, asked the way games ask when
-  they open their own ports
-- whether Windows will accept connections **on the network you're on now**
-- whether Tailscale is already running
+It is a switchboard with a memory. It carries messages between a host and
+the people who joined that host, and it keeps the last map of each session
+so somebody arriving late is caught up without waiting on the GM's machine.
+It holds no campaign, no rules and no save files — the GM's app is still the
+authority on what is true.
 
-Then one verdict and, where something can be done, a button that does it:
-open the port on the router, allow it through Windows, or set up Tailscale.
-The join window has the same checks behind **Why can I not join?**
+**In the app**, **Connect to a Server** opens a saved list: add an address,
+give it any name you like, connect. That name is yours; nobody else sees it,
+and the list sorts so the one you used last is at the top.
 
-**Run a Relay** — on the main menu. One person runs it and leaves the window
-open; everybody else, the host included, dials out to it, so only that one
-machine has to be reachable. It's the same idea as running a game server for
-friends, except it only carries messages — it never sees a campaign and keeps
-nothing. It sets itself up: asks the router to open its port, checks the
-firewall, finds the address, and shows the one line to read out, with a live
-count of who's connected. Stopping it closes the port again.
+Being on a server is as good as being on the same network. The lobby shows
+**everyone on it by name**, and **every session running on it** as
+`[Marshell: Curse of Strahd]` with the seats taken. Anybody can host; joining
+is picking one and pressing **Join**.
 
-The person running the relay doesn't have to be the one running the game,
-and they join with an invite code like anybody else. Only the host types the
-relay address, once — it's baked into the invite code, so nobody else ever
-sees it.
-
-**Firewall help.** Windows only ever asks once, and a rule allowing the app
-on a Private network does nothing on a Public one — so it blocks in complete
-silence, which looks exactly like nothing being wrong. The check compares
-the rule against the network you're actually on and says so. There's a
-button to fix it, and step-by-step instructions naming the exact file to
-browse to for anyone without an administrator password.
+There is one manual step in the whole arrangement, done once by one person:
+forwarding a port on the router to the machine running the server. The
+README has the details, including the two things that quietly break it later
+— a home address that changes, and a machine whose network address moves.
 
 ### Mods
 
@@ -236,11 +225,13 @@ multiplayer.
 - **Room blueprints exist for the Sewer only.** Prison, Mines, Dwarven Ruins
   and Deep Dark are set up as regions — terrain generation knows what each
   should be made of — but have no room shapes drawn yet.
-- **Self-hosting over the internet needs a forwarded port.** If you can't
-  forward one, use the relay instead.
-- **Automatic port opening has never met a real router.** It is covered by
-  tests against a stand-in, but the machine it was written on has no router
-  that offers the feature, so its first real trial will be on yours.
+- **Playing with people outside your house needs a server**, and that
+  server needs a forwarded port. There is no way around it built into the
+  app any more: the previous release tried to open the router itself, check
+  the firewall and install Tailscale for you, and it was a great deal of
+  code for something one person doing it once does better by hand.
+- **A session ends when its host leaves.** The server keeps the last map,
+  not the campaign, so it cannot carry a game on without the GM.
 - **Pillow is optional but wanted.** Without it, profile pictures and
   portraits are unavailable; everything else works.
 
@@ -258,14 +249,5 @@ multiplayer.
 - Generate Contents refused to place anything in a room with terrain in it.
 - The stats and inventory panel was cut off in a small window.
 - The host's cursor was invisible to everyone else.
-- The host window opened without showing the boxes the remembered choice
-  needed — the rows only appeared when a radio button was *clicked*, and
-  clicking the one already selected does nothing. Anyone who always hosted
-  through a relay never saw the box to type the relay address into.
-- Two relays could bind the same port on Windows and silently split
+- Two servers could bind the same port on Windows and silently split
   arrivals between them, half a table meeting in each.
-- The firewall fix built a command through four layers of quoting; the
-  app's name contains an apostrophe, so the rule name arrived mangled and
-  the fix failed without saying so.
-- The firewall check compared a profile name against a numeric bitmask, so
-  every machine reported as blocked.

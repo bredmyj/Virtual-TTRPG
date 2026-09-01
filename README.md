@@ -16,7 +16,7 @@ plain files in a folder you can copy anywhere.
 
 ### The easy way
 
-1. Download `Bredmyj-VTT-1.2.1-windows.zip` from the
+1. Download `Bredmyj-VTT-1.3.0-windows.zip` from the
    [releases page](../../releases/latest).
 2. Unzip it anywhere — Desktop, Documents, a memory stick.
 3. Double-click **Bredmyj's VTT.exe**.
@@ -184,29 +184,15 @@ wall, never across empty space, and never into a locked room without the key.
 
 ## Playing together
 
-Three ways to play with other people. Pick by where they are.
+Two ways, and which one you want depends only on where the other people are.
 
 | Where they are | Use |
 |---|---|
-| Same house, same wifi | **People on this network** |
-| Elsewhere, and your router lets connections in | **People anywhere, straight from this computer** |
-| Elsewhere, and it does not | **People anywhere, through a relay** |
+| Same house, same wifi | **Host on This Network** / **Join on This Network** |
+| Anywhere else | **Connect to a Server** |
 
 Everyone needs the **same version** — the check is exact, and anyone on an
 older build is turned away with a message saying which version to get.
-
-### Hosting a session
-
-1. Main menu → **Host a Session**.
-2. Pick the campaign.
-3. Under **Who is playing**, choose one of the three above.
-4. Press **Start Hosting**.
-5. Read out the **invite code** it gives you.
-
-If you chose *through a relay*, two boxes appear for the relay's address and
-port — see [Running a relay](#running-a-relay). You only type that once; it is
-remembered, and it gets baked into the invite code so nobody else ever needs
-it.
 
 Whoever hosts starts as the **GM**. Right-click a face on the roster along the
 bottom to give somebody a seat — GM, or Player 1 through 8. Handing the GM
@@ -214,86 +200,122 @@ chair over really hands it over: the tools go with it, and you drop to player
 mode. The chair is never left empty; if you demote whoever holds it, it comes
 back to you.
 
-### Joining a session
+Once you are in a game you will see a roster of faces along the bottom with
+names and pictures, and everyone's coloured cursor moving on the shared map.
+If a player figure has not been claimed, right-click it and choose **"This is
+my character"** to make it yours; its inventory and stats then fill your panel
+on the right.
 
-1. Main menu → **Join a Session**.
+### On the same network
+
+Nothing to set up. One person hosts, everyone else types a code.
+
+**Hosting:**
+
+1. Main menu → **Host on This Network**.
+2. Pick the campaign.
+3. Press **Start Hosting**.
+4. Read out the **invite code**.
+
+**Joining:**
+
+1. Main menu → **Join on This Network**.
 2. Type the invite code. Dashes and capitals do not matter.
 3. Press **Join**.
 
-That is all — even for a relay game. The code carries everything.
+The code carries the address, the port and a secret, so nothing else has to
+be said out loud. If a join times out, you are almost certainly not on the
+same network — check the wifi, not the app.
 
-Once you are in, you will see a roster of faces along the bottom with names
-and pictures, and everyone's coloured cursor moving on the shared map. If a
-player figure has not been claimed, right-click it and choose **"This is my
-character"** to make it yours; its inventory and stats then fill your panel on
-the right.
+### Through a server
 
-If the join fails, a **Why can I not join?** button appears. A timeout almost
-always means the host cannot be reached from outside rather than anything
-wrong at your end.
+One person runs a server; everyone else adds its address once and forgets
+about it. Being on the same server is as good as being on the same network:
+anybody there can host, everybody sees what is being played, and joining is
+picking a session off a list.
 
-### Running a relay
+**Getting on one:**
 
-Home internet connections let you dial *out* freely but usually refuse calls
-coming *in*. If nobody's connection will accept a call, one person runs a
-relay — a middleman everybody dials out to, the same idea as running a game
-server for friends.
+1. Main menu → **Connect to a Server**.
+2. **Add**, and put in the address the server's owner read out — something
+   like `203.0.113.9:7777`, or a name like `dave.duckdns.org`. Give it
+   whatever name you like; that name is yours and nobody else sees it.
+3. Pick it and press **Connect**.
 
-**Whoever has the most ordinary home connection should run it. It does not
-have to be the person running the game.**
+You are now in the **lobby**. Along the top is everyone else on the server by
+name. Below is every session running on it, shown as
+`[Marshell: Curse of Strahd]` with how many seats are taken.
 
-1. Main menu → **Run a Relay**.
-2. Press **Start the relay**.
-3. It sets itself up — asks the router to open its port, checks the firewall,
-   finds the address — then shows a line like:
+**Hosting there:** press **Host a Session**, pick the campaign, and it appears
+on everyone's list straight away. Your machine is still the one running the
+game — the server only carries the messages.
+
+**Joining there:** pick a session and press **Join**.
+
+While you are playing, anyone arriving on or leaving the server gets a single
+line in the log by name — enough to notice somebody has turned up, and not
+enough to get in the way.
+
+Leaving a game puts you back at the menu. The saved server stays in your list
+for next time, sorted so the one you used last is at the top.
+
+### Running a server
+
+The server is a plain console program. It needs Python, and it needs to be
+somewhere the others can reach — which for people outside your house means
+forwarding one port on the router.
+
+1. Double-click **Run Server.bat**, or `python server.py`.
+2. It prints the addresses to hand round:
 
    ```
-   TELL EVERYONE TO USE
-   203.0.113.9     port 7788
+   On this network, people use:
+       192.168.1.50:7777
+
+   From anywhere else, people use:
+       203.0.113.9:7777
    ```
 
-4. Read that out, or press **Copy this**.
-5. **Leave the window open while you play.**
+3. Read out whichever applies and leave it running.
 
-Whoever is hosting puts that address and port into **Host a Session → People
-anywhere, through a relay**. Everyone else just uses the invite code as usual.
+Ctrl-C stops it, and every session on it ends.
 
-The relay carries messages and nothing else — it never sees a campaign and
-keeps nothing. Stopping it, or closing the window, shuts it down properly and
-closes the port on the router again. Every session on it ends when you stop
-it.
+**For people outside the house, forward TCP port 7777 to that machine.** That
+is the one manual step in all of this, and it is done once:
 
-The person running the relay joins the game with an invite code like anybody
-else. Running it gives them nothing special.
+- Give the machine a fixed address on your network — a **DHCP reservation** in
+  the router is better than setting a static IP on the machine itself.
+- Forward **TCP 7777** to that address.
+- Allow it through the machine's firewall.
+- Your home address usually changes every so often. A free dynamic-DNS name
+  (DuckDNS, No-IP) saves re-reading the number out; people then save the name
+  instead and it keeps working.
 
-You can also run it without the app at all — double-click **Run Relay.bat**,
-or `python relay.py`.
+If your provider has you behind a shared address — common on mobile, satellite
+and some fibre — no forwarding is possible at all, by anyone. The way round it
+is to run the server on a machine that does have a real address, or to put
+everyone on a virtual network like Tailscale and use its addresses.
 
-### When people cannot reach you
+**Settings** live in `server.json` beside the program, written on first run:
 
-In the host window, press **Can people reach me?**. It takes about ten seconds
-and tells the failures apart:
+| | |
+|---|---|
+| `name` | what the server calls itself in the lobby |
+| `motd` | a line shown to everyone who connects |
+| `port` | which port to listen on |
+| `password` | leave empty for none |
+| `max_people` | how many can be on it at once |
 
-- whether anything can get out at all
-- what the internet sees you as
-- whether there is a router here you control, and whether it will open a port
-- whether Windows will accept connections **on the network you are on now**
-- whether Tailscale is running
+Anything given on the command line sticks — `python server.py --name "Tuesday
+Game" --password hello` writes those in and they apply from then on.
 
-Then it gives one verdict and, where something can be done, a button that does
-it: open the port on the router, allow it through Windows, or set up
-Tailscale.
+The server holds no campaign and no save files. It keeps the roster, and the
+last map of each session so somebody arriving late is caught up without
+waiting on the GM's machine. That is all it keeps, and it keeps none of it
+after it stops.
 
-**The firewall one catches people out.** Windows only ever asks once, and a
-rule allowing the app on a *Private* network does nothing on a *Public* one —
-so it blocks in silence, which looks exactly like nothing being wrong. The
-check compares the rule against the network you are actually on. There is a
-button to fix it, and written steps naming the exact file to browse to if you
-do not have the administrator password.
-
-If you are on a shared connection — a flat, a campus, or an internet provider
-that puts many homes behind one address — no port forwarding is possible for
-you at all, by anyone. Use a relay on somebody else's machine, or Tailscale.
+The person running the server joins games on it like anybody else. Running it
+gives them nothing special.
 
 ---
 
@@ -320,6 +342,8 @@ repository:
 | `profile.json`, `profile.png` | your name, colour and picture |
 | `faces/` | cached pictures of people who have joined |
 | `mods.json` | your settings |
+| `servers.json` | the servers you have added |
+| `server.json` | your own server's settings, if you run one |
 
 To back a campaign up, copy its folder out of `saves/`. To move the whole
 thing to another computer, copy the folder.
@@ -331,13 +355,15 @@ thing to another computer, copy the folder.
 **"Windows protected your PC" on first run** — SmartScreen, because the
 program is not code-signed. **More info** → **Run anyway**.
 
-**A friend's join times out** — the host cannot be reached. Host presses **Can
-people reach me?**; usually it is the router or the firewall, and usually the
-answer is to run a relay.
+**A join on this network times out** — you are not on the same network.
+Check that both machines are on the same wifi or the same router, not a guest
+network.
 
-**No firewall prompt appeared** — Windows only asks once ever. If a rule
-already exists for the wrong network type it blocks silently. Use **Can people
-reach me?** → **Allow it through Windows**.
+**Nobody can reach the server** — from outside the house that is nearly always
+the router: the port is not forwarded, it points at the wrong machine, or the
+machine's address moved. From inside the house it is nearly always the
+firewall on the machine running it. Test from a phone on mobile data; if that
+works and a friend still cannot get in, the problem is at their end.
 
 **"The host is running version X and you have Y"** — everyone needs the same
 build. Grab the same release.
@@ -345,8 +371,9 @@ build. Grab the same release.
 **No profile pictures** — Pillow is not installed. `launcher.bat` offers to
 install it, or run `pip install pillow`.
 
-**The relay says NOT READY** — nothing could open a port to that machine. Run
-the relay on someone else's computer instead; it does not have to be the host.
+**"Could not listen on port 7777"** — something else on that machine already
+has it. Run the server with `--port` and another number, and tell people the
+new one.
 
 ---
 
@@ -361,4 +388,4 @@ nothing needs installing at the other end.
 
 ---
 
-Version 1.2.1. See [RELEASE.md](RELEASE.md) for what changed.
+Version 1.3.0. See [RELEASE.md](RELEASE.md) for what changed.

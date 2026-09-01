@@ -1,11 +1,11 @@
 @echo off
-rem  The middleman. One person runs this - whoever has the most ordinary
-rem  home connection - and everybody else dials out to it, the person
-rem  running the game included.
+rem  The server. One person runs this - whoever is willing to forward a
+rem  port once - and everybody else adds its address to their server list.
 rem
-rem  It sets itself up, then prints the address to tell everyone.
+rem  It prints the addresses to hand round. Ctrl-C stops it, and every
+rem  session on it ends with it.
 setlocal
-title Bredmyj's VTT - Relay
+title Bredmyj's VTT - Server
 cd /d "%~dp0"
 
 set "PY="
@@ -21,6 +21,6 @@ if not defined PY (
     exit /b 1
 )
 
-%PY% relay.py %*
+%PY% server.py %*
 echo.
 pause

@@ -1,22 +1,21 @@
-"""Playing together over a local network.
+"""Playing together, on this network or through a server.
 
 The shape of it:
 
   * One machine hosts. Its app holds the campaign and is the authority on
     what is true; everyone else is a view onto it.
-  * A host listens on a TCP port and hands out an invite code. The code is
-    just an address in a form somebody can read down a phone - it carries
-    the host's LAN address, the port, and a secret so a stray connection
-    from elsewhere on the network cannot wander in.
+  * There are two ways to reach a host. On the same network they listen on
+    a TCP port and hand out an invite code - an address in a form somebody
+    can read down a phone, carrying the host's address, the port, and a
+    secret so a stray connection cannot wander in. Anywhere else, everybody
+    dials out to a server (see server.py) and picks the session off a list.
+  * Either way the conversation past that point is identical, which is the
+    point: nothing above this file has to know which way in was used.
   * Messages are one JSON object per line. Easy to read in a log, easy to
     extend, and no framing bugs to chase.
   * Every socket is read on its own thread and every message it produces is
     dropped into a queue. Nothing here touches Tk - the UI drains the queue
     on its own clock, so a slow network can never freeze the window.
-
-Local network only, deliberately. Reaching a host across the internet needs
-either a forwarded port or a machine in the middle, and neither belongs
-buried in here.
 """
 
 import base64
@@ -31,12 +30,8 @@ import time
 DEFAULT_PORT = 7777
 MAX_SEATS = 8               # joiners; the host does not take a seat
 SECRET_BYTES = 5
-# What marks a code as going through a meeting point rather than straight
-# to somebody on the same network.
-RELAY_MARK = "R"
-# The four bytes every STUN reply is scrambled with.
-COOKIE = struct.pack("!I", 0x2112A442)
 HANDSHAKE_TIMEOUT = 8.0     # seconds a half-open connection may sit there
+ANSWER_TIMEOUT = 10.0       # how long to wait on a server answering us
 
 import paths
 
@@ -173,24 +168,6 @@ def make_code(address, port, secret):
     return "-".join(text[i:i + 4] for i in range(0, len(text), 4))
 
 
-def make_relay_code(address, port, secret):
-    """An invite code for a session held at a meeting point.
-
-    The same shape as the ordinary one with a marker on the front, so a
-    joiner can tell at a glance - and so the app knows to dial the relay
-    rather than trying to reach the host directly.
-    """
-    return RELAY_MARK + "-" + make_code(address, port, secret)
-
-
-def is_relay_code(code):
-    """Does this code point at a meeting point rather than a machine here?"""
-    if not code:
-        return False
-    text = "".join(str(code).split()).replace("-", "").replace("_", "").upper()
-    return text.startswith(RELAY_MARK)
-
-
 def read_code(code):
     """(address, port, secret) from a code, or None if it is not one.
 
@@ -200,8 +177,6 @@ def read_code(code):
     if not code:
         return None
     text = "".join(code.split()).replace("-", "").replace("_", "").upper()
-    if text.startswith(RELAY_MARK):
-        text = text[len(RELAY_MARK):]
     text = text.replace("0", "O").replace("1", "I")   # common misreadings
     padding = "=" * (-len(text) % 8)
     try:
@@ -213,61 +188,6 @@ def read_code(code):
     address = socket.inet_ntoa(raw[:4])
     port = struct.unpack("!H", raw[4:6])[0]
     return address, port, raw[6:]
-
-
-def public_address(port=0, timeout=3.0):
-    """The address the internet sees this machine as, or None.
-
-    Asked of a STUN server, which simply reports where the question came
-    from. If `port` is given the question is sent from that port, so the
-    answer also says whether the network in front of this machine keeps
-    port numbers - which is what decides whether anyone can dial in.
-    """
-    servers = [("stun.l.google.com", 19302), ("stun1.l.google.com", 19302),
-               ("stun.cloudflare.com", 3478)]
-    request = struct.pack("!HHI", 0x0001, 0, 0x2112A442) + os.urandom(12)
-    for host, at in servers:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        try:
-            if port:
-                sock.bind(("", port))
-            sock.settimeout(timeout)
-            sock.sendto(request, (host, at))
-            data, _from = sock.recvfrom(2048)
-        except OSError:
-            continue
-        finally:
-            sock.close()
-        walk = 20
-        while walk + 4 <= len(data):
-            kind, size = struct.unpack("!HH", data[walk:walk + 4])
-            body = data[walk + 4:walk + 4 + size]
-            if kind == 0x0020 and len(body) >= 8:        # XOR-MAPPED-ADDRESS
-                seen = struct.unpack("!H", body[2:4])[0] ^ 0x2112
-                raw = bytes(b ^ c for b, c in
-                            zip(body[4:8], COOKIE))
-                return socket.inet_ntoa(raw), seen
-            if kind == 0x0001 and len(body) >= 8:        # MAPPED-ADDRESS
-                return (socket.inet_ntoa(body[4:8]),
-                        struct.unpack("!H", body[2:4])[0])
-            walk += 4 + size + ((4 - size % 4) % 4)
-    return None
-
-
-def reachable_from_outside(port=DEFAULT_PORT):
-    """Can somebody out there aim at this machine on this port?
-
-    Not a promise - only the network in front of this machine can say for
-    certain, and a firewall may still refuse. But if the port number is
-    kept on the way out, an incoming connection has somewhere to land, and
-    hosting straight from here is worth trying before anything else.
-    """
-    answer = public_address(port=port)
-    if answer is None:
-        return None, None
-    address, seen = answer
-    return address, seen == port
 
 
 def local_addresses():
@@ -410,7 +330,7 @@ class Server:
         self.face_paths = {}
         if profile.picture:
             self.face_paths[profile.token] = profile.picture
-        self.link = None                # the relay, when playing over the net
+        self.link = None                # the line to a server, if on one
         self.inbox = queue.Queue()
         self.peers = {}                 # token -> Peer
         self._lock = threading.RLock()
@@ -439,23 +359,19 @@ class Server:
         threading.Thread(target=self._accept_loop, daemon=True).start()
         return self.port
 
-    def open_relay(self, address, port=None, room=None):
-        """Host through a meeting point instead of listening for callers.
+    def host_on(self, hub):
+        """Run this session on a server rather than listening for callers.
 
-        Returns None, or why it could not. The room name doubles as the
-        thing a joiner has to know, so it is made from the session secret
-        rather than being anything guessable.
+        Nothing has to be reachable at this end: the line to the server is
+        one we opened, and everybody who joins arrives down it. The server
+        has already agreed to the session by the time this is called, so
+        there is nothing here that can fail.
         """
-        room = room or base64.b32encode(self.secret).decode().rstrip("=")
-        link = RelayLink(self, address, port or RELAY_PORT, room)
-        why = link.open()
-        if why is not None:
-            return why
-        self.link = link
+        self.link = HubLink(self, hub)
         return None
 
-    def _relay_peer(self, number):
-        """Whoever is seated under this relay number, if anybody."""
+    def _hub_peer(self, number):
+        """Whoever is seated under this server's number, if anybody."""
         with self._lock:
             for peer in self.peers.values():
                 if getattr(peer, "number", None) == number:
@@ -570,17 +486,23 @@ class Server:
         """Check a hello and seat whoever sent it.
 
         Shared by both ways in - a joiner on the same network arrives on a
-        socket of their own, one from the internet arrives down the relay,
-        and neither should be let in on different terms.
+        socket of their own, one from a server arrives down our single line
+        to it, and neither should be let in on different terms.
         """
         sock = peer.sock
         address = peer.address
-        secret = base64.b64decode(hello.get("secret", "") or "")
-        if secret != self.secret:
-            peer.send({"kind": "denied", "why": "that code is not for "
-                                                "this session"})
-            peer.close()
-            return False
+        # An invite code is how somebody on this network proves they were
+        # invited. Through a server there is no code to know: they picked
+        # the session off a list, and the server would not have sent them
+        # here unless it had already let them onto it - so the secret it
+        # stands in for has already been checked, by the server.
+        if not isinstance(peer, HubPeer):
+            secret = base64.b64decode(hello.get("secret", "") or "")
+            if secret != self.secret:
+                peer.send({"kind": "denied", "why": "that code is not for "
+                                                    "this session"})
+                peer.close()
+                return False
 
         # Everyone has to be running the same build. The map is sent as one
         # whole thing, so a version that knows about something this one does
@@ -670,11 +592,17 @@ class Client:
         self.profile = profile
         self.inbox = queue.Queue()
         self.sock = None
+        self.hub = None             # set when we got here through a server
         self.host = None            # the host's profile card
         self.seat = None            # our own card, as the host sees it
         self.peers = []
         self.faces = {}             # token -> where their picture landed
         self.host_version = None
+        # Only used on the way in through a server: the reply to our hello
+        # arrives on the server's reading thread rather than in a loop of
+        # our own, so joining waits here for it.
+        self.ready = threading.Event()
+        self.refused = None
         self._running = False
 
     def connect(self, code, timeout=6.0):
@@ -688,28 +616,6 @@ class Client:
         except OSError as exc:
             return "could not reach %s on port %d (%s)" % (address, port, exc)
         sock.settimeout(timeout)
-        if is_relay_code(code):
-            # Through a meeting point: ask for the session first, and after
-            # that the conversation is the same as any other.
-            room = base64.b32encode(secret).decode().rstrip("=")
-            send_line(sock, {"relay": "join", "room": room})
-            waiting = LineReader(sock)
-            while True:
-                batch = waiting.read()
-                if batch is None:
-                    _shutdown(sock)
-                    return "the relay closed the connection"
-                answer = None
-                for message in batch:
-                    if message.get("relay") in ("no", "joined"):
-                        answer = message
-                        break
-                if answer is None:
-                    continue
-                if answer["relay"] == "no":
-                    _shutdown(sock)
-                    return answer.get("why", "the relay turned you away")
-                break
         send_line(sock, {"kind": "hello",
                          "secret": base64.b64encode(secret).decode(),
                          "version": VERSION,
@@ -743,6 +649,10 @@ class Client:
                     return None
 
     def send(self, message):
+        if self.hub is not None:
+            # Through a server: the one line out carries everything, and the
+            # server knows which host these belong to.
+            return self.hub.send(message)
         if self.sock is None:
             return False
         if send_line(self.sock, message):
@@ -752,6 +662,12 @@ class Client:
 
     def close(self):
         self._running = False
+        if self.hub is not None:
+            # The line out stays up - leaving a session puts us back in the
+            # server's lobby rather than throwing us off it.
+            hub, self.hub = self.hub, None
+            hub.leave_session()
+            return
         if self.sock is not None:
             _shutdown(self.sock)
             self.sock = None
@@ -769,6 +685,21 @@ class Client:
     def _take(self, message):
         """Note anything we keep our own copy of, then pass it along."""
         kind = message.get("kind")
+        if self.hub is not None and not self.ready.is_set():
+            # Still joining. The host either lets us in or does not, and
+            # nothing else means anything until one of those has happened.
+            if kind == "denied":
+                self.refused = message.get("why",
+                                           "the host turned you away")
+                self.ready.set()
+                return
+            if kind == "welcome":
+                self.host = message.get("host")
+                self.seat = message.get("you")
+                self.host_version = message.get("version")
+                self._running = True
+                self.ready.set()
+                return
         if kind == "roster":
             self.peers = message.get("peers") or []
             if message.get("host"):
@@ -799,24 +730,22 @@ def _shutdown(sock):
 
 
 # ==========================================================================
-# playing with people who are not on your network
+# playing through a server
 # ==========================================================================
-RELAY_PORT = 7788
-
-
-class RelayPeer:
+class HubPeer:
     """A joiner who is not on the end of a socket of our own.
 
-    Their messages arrive down the host's single line to the relay, tagged
+    Their messages arrive down the host's single line to the server, tagged
     with which of them sent it, and replies go back the same way. To the
-    rest of the code it behaves exactly like a peer on its own socket.
+    rest of the code it behaves exactly like a peer on its own socket, which
+    is what lets Server not care how anybody got here.
     """
 
     def __init__(self, link, number):
         self.link = link
         self.number = number
         self.sock = None
-        self.address = ("relay", number)
+        self.address = ("server", number)
         self.token = None
         self.name = "..."
         self.colour = PROFILE_COLOURS[0][1]
@@ -837,100 +766,299 @@ class RelayPeer:
                 "role": self.role}
 
 
-class RelayLink:
-    """The host's one line out to the relay.
+class HubLink:
+    """A hosting session's end of the line to the server.
 
-    Everybody dials out to the meeting point - the host included - so no
-    connection ever has to come in to a home machine, which is the whole
-    reason this works where a forwarded port does not.
+    It owns no socket. The HubClient holds the only one and hands this the
+    traffic that belongs to the session, which is what lets one line carry
+    the game and the lobby at the same time.
     """
 
-    def __init__(self, server, address, port, room):
+    def __init__(self, server, hub):
         self.server = server
-        self.address = address
-        self.port = port
-        self.room = room
-        self.sock = None
-        self.waiting = {}       # relay's number -> the hello we are expecting
-        self._lock = threading.Lock()
+        self.hub = hub
+        self.waiting = {}       # number -> somebody who has not said hello
+        self._running = True
+
+    def close(self):
         self._running = False
 
-    def open(self, timeout=8.0):
-        """Dial the relay and claim the room. Returns None, or why not."""
+    def to_peer(self, number, message):
+        if not self._running:
+            return False
+        return self.hub.send({"peer": number, "body": message})
+
+    def handle(self, message):
+        """One of the server's messages about somebody in our session."""
+        verb = message.get("hub")
+        number = message.get("peer")
+        if verb == "arrived":
+            self.waiting[number] = HubPeer(self, number)
+            return
+        if verb == "gone":
+            peer = self.waiting.pop(number, None)
+            seated = self.server._hub_peer(number)
+            if seated is not None:
+                self.server._lost(seated)
+            elif peer is not None:
+                peer.close()
+            return
+        if verb != "from":
+            return
+        body = message.get("body") or {}
+        seated = self.server._hub_peer(number)
+        if seated is not None:
+            body["from"] = seated.token
+            self.server.inbox.put(body)
+            return
+        # Not seated yet, so this should be their hello. Either way they stop
+        # being expected: admitted, or turned away with a reason.
+        peer = self.waiting.pop(number, None)
+        if peer is None or body.get("kind") != "hello":
+            return
+        self.server._admit(peer, body)
+
+
+class HubClient:
+    """The app's one line to a server, carrying the lobby and a session.
+
+    Everything on the line is either business with the server itself -
+    marked with a "hub" key - or traffic for whatever session this app is
+    in. Keeping both on one connection is what makes the list of who else is
+    on the server stay right while a game is running.
+
+    Nothing here touches Tk. Lobby news lands in `inbox` and the window
+    drains it on its own clock, the same as everything else.
+    """
+
+    def __init__(self, profile):
+        self.profile = profile
+        self.inbox = queue.Queue()      # lobby news for whoever is looking
+        self.sock = None
+        self.address = ""
+        self.port = DEFAULT_PORT
+        self.name = ""                  # what the server calls itself
+        self.motd = ""
+        self.people = []                # everybody on the server
+        self.sessions = []              # every session open on it
+        self.session = None             # the id of ours, when we are in one
+        self.server = None              # our Server, when we are hosting
+        self.client = None              # our Client, when we joined one
+        self.link = None                # HubLink, when we are hosting
+        self._answers = queue.Queue()   # replies to something we asked
+        self._send_lock = threading.Lock()
+        self._running = False
+
+    # -- getting on it -----------------------------------------------------
+    def connect(self, address, port=DEFAULT_PORT, password="", timeout=8.0):
+        """Dial a server. Returns None, or why it did not work."""
         try:
-            sock = socket.create_connection((self.address, self.port),
-                                            timeout=timeout)
+            sock = socket.create_connection((address, port), timeout=timeout)
         except OSError as exc:
-            return "could not reach the relay at %s port %d (%s)" % (
-                self.address, self.port, exc)
+            return "could not reach %s on port %d (%s)" % (address, port, exc)
         sock.settimeout(timeout)
-        send_line(sock, {"relay": "host", "room": self.room})
+        send_line(sock, {"hub": "hello", "version": VERSION,
+                         "profile": self.profile.card(),
+                         "face": self.profile.face(),
+                         "password": password or ""})
         reader = LineReader(sock)
         while True:
             batch = reader.read()
             if batch is None:
                 _shutdown(sock)
-                return "the relay closed the connection"
+                return "the server closed the connection"
             for message in batch:
-                if message.get("relay") == "no":
+                if message.get("hub") == "no":
                     _shutdown(sock)
-                    return message.get("why", "the relay turned us away")
-                if message.get("relay") == "hosting":
-                    self.sock = sock
-                    self._running = True
-                    sock.settimeout(None)
-                    threading.Thread(target=self._listen, args=(reader,),
-                                     daemon=True).start()
-                    return None
+                    return message.get("why", "the server turned you away")
+                if message.get("hub") != "welcome":
+                    continue
+                self.sock = sock
+                self.address = address
+                self.port = port
+                self.name = message.get("server") or address
+                self.motd = message.get("motd") or ""
+                self.people = message.get("people") or []
+                self.sessions = message.get("sessions") or []
+                self._running = True
+                sock.settimeout(None)
+                threading.Thread(target=self._listen, args=(reader,),
+                                 daemon=True).start()
+                return None
 
     def close(self):
         self._running = False
+        if self.link is not None:
+            self.link.close()
+            self.link = None
         if self.sock is not None:
             _shutdown(self.sock)
             self.sock = None
 
-    def to_peer(self, number, message):
-        with self._lock:
+    def send(self, message):
+        """One message up the line. False once it has gone."""
+        with self._send_lock:       # the game and the lobby share this line
             if self.sock is None:
                 return False
-            return send_line(self.sock, {"peer": number, "body": message})
+            return send_line(self.sock, message)
 
+    def refresh(self):
+        """Ask for the lobby again rather than waiting to be told."""
+        self.send({"hub": "lobby"})
+
+    # -- sessions ----------------------------------------------------------
+    def open_session(self, campaign="", seats=MAX_SEATS,
+                     timeout=ANSWER_TIMEOUT):
+        """Run a game here. Returns (Server, None) or (None, why)."""
+        if self.session is not None:
+            return None, "you are already in a session"
+        self._drain_answers()
+        if not self.send({"hub": "open", "campaign": campaign,
+                          "seats": seats}):
+            return None, "the line to the server went down"
+        answer = self._answer(("opened", "no"), timeout)
+        if answer is None:
+            return None, "the server did not answer"
+        if answer.get("hub") == "no":
+            return None, answer.get("why", "the server said no")
+
+        server = Server(self.profile, campaign=campaign,
+                        seats=answer.get("seats") or seats)
+        server.host_on(self)
+        self.server = server
+        self.link = server.link
+        self.session = answer.get("session")
+        return server, None
+
+    def join_session(self, ident, timeout=ANSWER_TIMEOUT):
+        """Sit down at somebody's game. Returns (Client, None) or (None, why).
+
+        Two handshakes, one after the other: the server has to agree to seat
+        us, and then the host has to let us in. They are separate because the
+        server does not know or care what the host's rules are - it only
+        knows whether there is a chair.
+        """
+        if self.session is not None:
+            return None, "you are already in a session"
+        self._drain_answers()
+        if not self.send({"hub": "join", "session": ident}):
+            return None, "the line to the server went down"
+        answer = self._answer(("joined", "no"), timeout)
+        if answer is None:
+            return None, "the server did not answer"
+        if answer.get("hub") == "no":
+            return None, answer.get("why", "the server said no")
+
+        client = Client(self.profile)
+        client.hub = self
+        self.client = client            # so the host's replies find their way
+        self.session = ident
+        self.send({"kind": "hello",
+                   "secret": "",        # the server vouched for us instead
+                   "version": VERSION,
+                   "profile": self.profile.card(),
+                   "face": self.profile.face()})
+        if not client.ready.wait(timeout):
+            self._back_to_lobby()
+            return None, "the host did not answer"
+        if client.refused:
+            why = client.refused
+            self._back_to_lobby()
+            return None, why
+        return client, None
+
+    def leave_session(self):
+        """Step out of whatever we are in, staying on the server."""
+        if self.session is None:
+            return
+        if self.server is not None:
+            self.server.stop()
+        self._back_to_lobby()
+
+    def _back_to_lobby(self):
+        self.session = None
+        self.server = None
+        self.client = None
+        if self.link is not None:
+            self.link.close()
+            self.link = None
+        self.send({"hub": "leave"})
+
+    # -- the reading thread ------------------------------------------------
     def _listen(self, reader):
         while self._running:
             batch = reader.read()
             if batch is None:
                 break
             for message in batch:
-                self._handle(message)
-        self._running = False
+                self._route(message)
+        if self._running:
+            self._running = False
+            self.sock = None
+            self.inbox.put({"kind": "hub_lost",
+                            "why": "lost the connection to %s"
+                                   % (self.name or self.address)})
+            # Whoever is in a session hears about it the way they would hear
+            # about any other disconnection, rather than sitting there
+            # wondering why nothing is moving any more.
+            if self.client is not None:
+                self.client._dropped("lost the server")
+            elif self.server is not None:
+                self.server.inbox.put({"kind": "dropped",
+                                       "why": "lost the server"})
 
-    def _handle(self, message):
-        kind = message.get("relay")
-        number = message.get("peer")
-        if kind == "arrived":
-            self.waiting[number] = RelayPeer(self, number)
+    def _route(self, message):
+        """Server business, or traffic for the session we are in."""
+        verb = message.get("hub")
+        if verb is None:
+            # Game traffic. Only a joiner ever sees it raw - a host's peers
+            # arrive wrapped, and go through the link above.
+            if self.client is not None:
+                self.client._take(message)
             return
-        if kind == "gone":
-            peer = self.waiting.pop(number, None)
-            seated = self.server._relay_peer(number)
-            if seated is not None:
-                self.server._lost(seated)
-            elif peer is not None:
-                peer.close()
+        if verb in ("lobby", "welcome"):
+            self.people = message.get("people") or []
+            self.sessions = message.get("sessions") or []
+            self.inbox.put({"kind": "lobby", "people": self.people,
+                            "sessions": self.sessions})
             return
-        if kind != "from":
+        if verb in ("arrived", "gone", "from"):
+            if self.link is not None:
+                self.link.handle(message)
             return
-        body = message.get("body") or {}
-        seated = self.server._relay_peer(number)
-        if seated is not None:
-            body["from"] = seated.token
-            self.server.inbox.put(body)
+        if verb == "ended":
+            why = message.get("why", "the session ended")
+            self.session = None
+            if self.client is not None:
+                self.client._dropped(why)
+                self.client = None
+            if self.server is not None:
+                self.server.stop()
+                self.server = None
+            self.link = None
+            self.inbox.put({"kind": "session_ended", "why": why})
             return
-        # Not seated yet, so this should be their hello.
-        peer = self.waiting.get(number)
-        if peer is None or body.get("kind") != "hello":
-            return
-        if self.server._admit(peer, body):
-            self.waiting.pop(number, None)
-        else:
-            self.waiting.pop(number, None)
+        # Anything else is the answer to something we asked for.
+        self._answers.put(message)
+
+    def _answer(self, verbs, timeout):
+        """Wait for one of these replies, ignoring anything else."""
+        deadline = time.time() + timeout
+        while True:
+            left = deadline - time.time()
+            if left <= 0:
+                return None
+            try:
+                message = self._answers.get(timeout=left)
+            except Exception:
+                return None
+            if message.get("hub") in verbs:
+                return message
+
+    def _drain_answers(self):
+        """Throw away replies to something we have stopped waiting for."""
+        while True:
+            try:
+                self._answers.get_nowait()
+            except Exception:
+                return

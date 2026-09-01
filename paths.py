@@ -16,7 +16,7 @@ only means something on one computer.
 import os
 import sys
 
-VERSION = "1.2.1"
+VERSION = "1.3.0"
 APP_NAME = "Bredmyj's VTT"
 
 
