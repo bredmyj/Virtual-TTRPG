@@ -16,7 +16,7 @@ plain files in a folder you can copy anywhere.
 
 ### The easy way
 
-1. Download `Bredmyj-VTT-1.3.0-windows.zip` from the
+1. Download `Bredmyj-VTT-1.4.0-windows.zip` from the
    [releases page](../../releases/latest).
 2. Unzip it anywhere — Desktop, Documents, a memory stick.
 3. Double-click **Bredmyj's VTT.exe**.
@@ -365,9 +365,9 @@ Anything in `plugins/` with a `PLUGIN` dictionary and a `setup(api)` function
 loads on startup and gets its own panel or window, hooks around every roll,
 and storage of its own per campaign. See `plugins/README.md`.
 
-The four that ship — the map, the journal, the fate chart and the meaning
-tables — are written against exactly the same API, so nothing they do is
-off-limits to yours. Turn them on and off under **Tools → Mods...**.
+The five that ship — the map, the journal, the encounter builder, the fate
+chart and the meaning tables — are written against exactly the same API, so
+nothing they do is off-limits to yours. Turn them on and off under **Tools → Mods...**.
 
 ---
 
@@ -428,4 +428,4 @@ nothing needs installing at the other end.
 
 ---
 
-Version 1.3.0. See [RELEASE.md](RELEASE.md) for what changed.
+Version 1.4.0. See [RELEASE.md](RELEASE.md) for what changed.

@@ -1,4 +1,4 @@
-# Bredmyj's VTT — v1.3.0
+# Bredmyj's VTT — v1.4.0
 
 A desktop virtual tabletop for solo and small-group RPGs. Dice, a dungeon
 map you can build and run live, a journal, and LAN or server multiplayer —
@@ -81,6 +81,26 @@ Notes on a drawing surface with an optional grid, a **Cast** list of people
 and places, and **Threads** for quests and vows with ten four-tick progress
 bars each.
 
+### Encounters
+
+Build a fight and run it, in its own window. A roster on the left, the
+selected creature's stat block on the right, a few lines on what is going on
+underneath, and — once it is running — a turn bar showing the round and whose
+turn it is.
+
+- **A library per campaign.** Add creatures from it, or invent one on the
+  spot and *Save to library* for next time. A creature in an encounter is a
+  copy, so wounding the goblin here leaves the library entry untouched, and a
+  second Goblin is named Goblin 2 so the turn order is never ambiguous.
+- **Players come off the game map**, each with whoever they belong to and
+  their stats brought across, along with anyone at the table who has no
+  character yet. Or add one by hand with a name and an initiative bonus.
+- **Whatever stats your game needs.** Right-click the stat block to add,
+  rename or remove one — there is no fixed list.
+- **Initiative, singly or in gangs.** Every creature gets its own d20, or
+  Ctrl-click a group and roll one d20 for the lot of them, each still adding
+  its own modifier.
+
 ### Solo tools
 
 - **Fate Chart** — the full Mythic GM Emulator 2nd Edition chart, all nine
@@ -112,7 +132,7 @@ Once you're in:
 
 Everyone in a session is version-checked, so you'll be told if someone's on
 a different build rather than finding out the hard way. **Everyone at the
-table needs 1.3.0** — anyone on an older build will be turned away with a
+table needs 1.4.0** — anyone on an older build will be turned away with a
 message saying which version to get.
 
 ### Servers
@@ -149,13 +169,34 @@ README has the details, including the two things that quietly break it later
 
 Anything in `plugins/` with a `PLUGIN` dict and a `setup(api)` function
 loads on startup and gets its own panel or window, hooks around every roll,
-and per-campaign storage of its own. The four that ship — the map, the
-journal, the fate chart and the meaning tables — are written against exactly
-the same API, so nothing they do is off-limits to yours.
+and per-campaign storage of its own. The five that ship — the map, the
+journal, the encounter builder, the fate chart and the meaning tables — are
+written against exactly the same API, so nothing they do is off-limits to
+yours.
 
 ---
 
 ## New in this release
+
+**Encounters.** A new mod, at **Tools → Encounters...**, for building a fight
+and running it round by round — the piece that sat between the dice roller's
+Initiative panel and the figures on the map, with nothing joining them up.
+
+Assemble the room from a per-campaign creature library, pull the players
+straight off the game map with their stats, then roll initiative — a d20
+each, or one d20 for a gang that acts together with everyone still adding
+their own modifier. *Run Encounter* opens a turn bar under the summary:
+the round, whose turn it is, who is next. **Next** hands the turn on and
+lifts that creature to the top of the roster; a full cycle ticks the round.
+
+Creatures in an encounter are copies, so the library entry is never wounded
+and the same goblin can be pulled in again next week at full health. Stats
+are whatever the creature carries — right-click to add, rename or remove
+one — so it does not assume your system's stat line.
+
+---
+
+## New in 1.3.0
 
 **Multiplayer roles that actually work.** Right-clicking a face on the
 roster and assigning GM or a player seat now does what it says. Handing the
@@ -237,7 +278,7 @@ multiplayer.
 
 ---
 
-## Bug fixes
+## Bug fixes in 1.3.0
 
 - Two hosts could bind the same port on Windows, so a second session
   silently stole the first one's connections.
