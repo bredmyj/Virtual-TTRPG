@@ -102,8 +102,8 @@ def setup(api):
 ```
 
 `modifier.py` is a short, working example of a panel plus the `after_roll`
-hook. The bigger bundled mods — `fate_chart.py`, `meaning_tables.py` and
-`journal.py` — show the same api used in anger.
+hook. The bigger bundled mods — `fate_chart.py`, `meaning_tables.py`,
+`encounters.py` and `journal.py` — show the same api used in anger.
 
 The Roll History and Initiative panels are built in rather than mods (they
 live in `core_panels.py`), so they always load and don't appear in the Mods

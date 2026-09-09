@@ -75,6 +75,7 @@ Everything else lives under **Tools**:
 
 - **Game Map...** — the dungeon (see below)
 - **Adventuring Journal...** — notes, cast and quest threads
+- **Encounters...** — build a fight and run it (see below)
 - **Mods...** — turn extras on and off
 
 **Fate Chart** and **Meaning Tables** appear as panels in the main window. The
@@ -85,6 +86,45 @@ a word to interpret; the tables are plain text files in
 
 Campaigns are managed under **File** — save, open, create, or delete. The
 title bar shows which one you are in.
+
+---
+
+## Encounters
+
+**Tools → Encounters...** opens it in its own window, split down the middle.
+
+**The roster, on the left.** *Roll Initiative* sits above the two add buttons —
+it is the one you reach for once the room is assembled. *+ Add creature* drops
+down your library (a handful of stock creatures to begin with) plus **New
+creature...** for one you make up on the spot. A creature in an encounter is a
+copy, so wounding the goblin here never touches the goblin in the library. A
+second Goblin is called Goblin 2, so the turn order is never ambiguous.
+
+*+ Add player* offers the characters already standing on the **game map**, each
+with whoever they belong to — *Boon - Marshell* — and brings their stats across.
+Under those come the people at the table who have no character yet, listed with
+their seat. **Player by hand...** asks for a name and an initiative bonus.
+Players are marked **PC** in the roster.
+
+**The stat block, on the right.** Click a creature to see its numbers. The name
+and every value are typed straight into. **Right-click** the stats to *add*,
+*rename* or *remove* one — a creature carries whatever stats your game needs,
+not a fixed list. *Save to library* stores it for next time.
+
+**Initiative.** *Roll Initiative* gives every creature its own d20. For a gang
+that acts together, **Ctrl-click** the ones you want, **right-click**, and pick
+*Roll group initiative* — one d20 for the lot of them, each still adding its own
+modifier. Whichever stat is called `Init Mod` (or `Initiative`, `Init`,
+`Dex Mod`, `DEX`) is the modifier.
+
+**What's going on.** A few lines along the bottom for the situation — who
+started it, what the room looks like, what everyone is standing on. It is kept
+with the campaign like everything else.
+
+**Running it.** *Run Encounter* rolls for anyone still without a count and opens
+the turn bar underneath the summary: the round, whose turn it is, and who is up
+next. **Next** hands the turn on and lifts that creature to the top of the
+roster; a full cycle ticks the round over. *End* puts it away.
 
 ---
 
