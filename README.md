@@ -117,6 +117,14 @@ that acts together, **Ctrl-click** the ones you want, **right-click**, and pick
 modifier. Whichever stat is called `Init Mod` (or `Initiative`, `Init`,
 `Dex Mod`, `DEX`) is the modifier.
 
+Every count sits in its own box, and any of them can be typed over — a ruling,
+a surprise round, or a number somebody read off their own dice. A box can be
+filled in without rolling at all; empty one and that creature goes back to
+having no count and sinks to the bottom. The list holds still while you type
+and settles when you press Enter or click away, so you can work down the
+column without it shuffling under you. Correcting a number mid-fight re-sorts
+the order but leaves the turn with whoever is up.
+
 **What's going on.** A few lines along the bottom for the situation — who
 started it, what the room looks like, what everyone is standing on. It is kept
 with the campaign like everything else.

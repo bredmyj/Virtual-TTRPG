@@ -189,6 +189,12 @@ their own modifier. *Run Encounter* opens a turn bar under the summary:
 the round, whose turn it is, who is next. **Next** hands the turn on and
 lifts that creature to the top of the roster; a full cycle ticks the round.
 
+Every count sits in its own box and can be typed over, so a rolled number is
+only ever a suggestion — overrule one, set a whole room by hand without
+rolling, or empty a box to put that creature back to no count at all. The
+list settles when you leave the box rather than under your fingers, and a
+correction made mid-fight leaves the turn with whoever is up.
+
 Creatures in an encounter are copies, so the library entry is never wounded
 and the same goblin can be pulled in again next week at full health. Stats
 are whatever the creature carries — right-click to add, rename or remove

@@ -102,6 +102,14 @@ def _number(text):
         return 0
 
 
+def _init_score(text):
+    """What a typed initiative box means. Blank is no count at all - the same
+    as never having rolled - and anything unreadable settles at zero rather
+    than refusing the keystroke."""
+    text = str(text).strip()
+    return _number(text) if text else None
+
+
 class Encounters:
     def __init__(self, api):
         self.api = api
@@ -117,6 +125,7 @@ class Encounters:
         self.turn = 0
         self.order = []         # ids, fixed while the encounter runs
         self._save_job = None
+        self._settling = False  # a re-sort is already under way
 
         self._load()
         self._build()
@@ -387,20 +396,37 @@ class Encounters:
             name = tk.Label(row, text=("> " if active else "   ") + creature["name"],
                             font=self.f["label"], bg=row_bg, fg=fg, anchor="w")
             name.pack(side="left", fill="x", expand=True, padx=(6, 2), pady=3)
+            # A box rather than a label. A rolled number is a suggestion:
+            # the GM overruling it, or setting one by hand without rolling at
+            # all, should not mean clearing it and rolling again.
             init = creature["init"]
-            score = tk.Label(row, text="-" if init is None else str(init),
-                             font=self.f["die"], bg=row_bg,
-                             fg=self.t["muted"] if init is None else fg,
-                             width=3, anchor="e")
-            score.pack(side="right", padx=(2, 8))
+            edge = self.t["panel"] if row_bg == self.t["bg"] else self.t["bg"]
+            score = tk.Entry(row, width=3, font=self.f["die"],
+                             bg=self.t["bg"], fg=fg, insertbackground=fg,
+                             justify="center", relief="flat", bd=0,
+                             highlightthickness=1, highlightbackground=edge,
+                             highlightcolor=self.t["accent"])
+            if init is not None:
+                score.insert(0, str(init))
+            score._init_box = True
+            score.pack(side="right", padx=(2, 8), ipady=2)
+            score.bind("<KeyRelease>",
+                       lambda _e, c=creature, w=score: self._type_init(c, w))
+            score.bind("<Return>",
+                       lambda _e, c=creature, w=score: self._enter_init(c, w))
+            score.bind("<FocusOut>",
+                       lambda _e, c=creature, w=score: self._leave_init(c, w))
             tag = tk.Label(row, text="PC" if creature.get("player") else "",
                            font=self.f["label"], bg=row_bg,
                            fg=self.t["accent"], width=2, anchor="e")
             tag.pack(side="right", padx=(2, 4))
 
-            for widget in (row, name, score, tag):
+            # Clicking the box means editing the number, so it is left out of
+            # the picking. The name and the rest of the row still select.
+            for widget in (row, name, tag):
                 widget.bind("<Button-1>",
                             lambda e, c=creature["id"]: self._click(c, e))
+            for widget in (row, name, score, tag):
                 widget.bind("<Button-3>",
                             lambda e, c=creature["id"]: self._roster_menu(c, e))
         self._bind_wheel(self.roster_rows, self.roster_canvas)
@@ -685,6 +711,63 @@ class Encounters:
         for creature in creatures:
             creature["init"] = None
         self._after_rolling()
+
+    def _type_init(self, creature, widget):
+        """Typed into a box. The number is taken as it is typed, but the
+        roster is left standing - re-sorting under a half-typed number would
+        pull the box out from under the next keystroke."""
+        creature["init"] = _init_score(widget.get())
+        self.schedule_save()
+
+    def _enter_init(self, creature, widget):
+        """Return - done with this one, so the list can settle now."""
+        self._type_init(creature, widget)
+        self._resettle()
+
+    def _leave_init(self, creature, widget):
+        """Focus has left a box. Reading it fails if the box went with a
+        re-render rather than a click, and in that case its number was taken
+        on the way in to that render anyway."""
+        if self._settling:
+            return
+        try:
+            creature["init"] = _init_score(widget.get())
+        except tk.TclError:
+            return
+        self.schedule_save()
+        self.win.after_idle(self._settle_if_done)
+
+    def _settle_if_done(self):
+        """Somebody filling the column in by hand goes box to box, and a
+        re-sort between two of them would throw away the click that got
+        there. So the order waits until the boxes are done with."""
+        try:
+            focus = self.win.focus_get()
+        except (tk.TclError, KeyError):
+            focus = None
+        if getattr(focus, "_init_box", False):
+            return
+        self._resettle()
+
+    def _resettle(self):
+        """Back into initiative order after a number was typed by hand.
+        Mid-fight the order is rebuilt around whoever is up, so correcting a
+        number does not send the round back to the top."""
+        if self._settling or not self.alive():
+            return
+        self._settling = True
+        try:
+            if self.running:
+                order = self._turn_order()
+                up = order[self.turn % len(order)] if order else None
+                self.order = [c["id"] for c in self._sorted()]
+                self.turn = self.order.index(up) if up in self.order else 0
+            self._render_roster()
+            self._render_stats()
+            self._render_runner()
+            self.save()
+        finally:
+            self._settling = False
 
     def _after_rolling(self):
         if self.running:
