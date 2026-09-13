@@ -14,11 +14,16 @@ from tkinter import messagebox, simpledialog
 
 import core_panels
 import dice_api
+import mac_ui
 import paths
 import pointer
 import roster_bar
 import session as session_module
 from dice_api import THEME, Die, Group, RollRequest, RollResult
+
+# Before anything builds a window: on a Mac the real Button is drawn by the
+# system and ignores every colour it is given. See mac_ui.
+mac_ui.install()
 
 BG = THEME["bg"]
 PANEL = THEME["panel"]

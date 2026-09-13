@@ -330,6 +330,11 @@ granted, and all three failed quietly rather than loudly:
   so the panels that divided by 120 scrolled by exactly nothing.
 - **Fonts.** Segoe UI and Consolas are Windows fonts. The app now asks for
   what is installed and takes the first one it finds.
+- **Buttons.** Tk does not draw its own buttons on a Mac - it asks the system
+  to, and the system ignores every colour it is given. In a dark app that
+  means white buttons with pale, near-invisible text on them. On macOS only,
+  a button is now a label that behaves like one, which takes its colours
+  everywhere. The main menu has always drawn its buttons that way.
 
 **launcher.command** is the Mac counterpart to launcher.bat: it finds Python,
 checks Tkinter came with it, offers Pillow, and starts the app. **Run
