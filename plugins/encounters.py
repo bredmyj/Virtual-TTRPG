@@ -53,6 +53,10 @@ PLUGIN = {
 # to carry is used - one game calls it a modifier, another calls it dexterity.
 INIT_STATS = ("Init Mod", "Initiative", "Init", "Dex Mod", "DEX")
 
+# The stat damage comes off. Whichever of these a creature carries gets a DMG
+# box beside it; a creature with none of them just has no damage box.
+HP_STATS = ("hp", "hit points", "hits", "health", "wounds")
+
 # Where the Game Map keeps its figures. Read-only, and only if it is there -
 # the two windows are separate mods and either can be turned off.
 MAP_FILE = "game_map.json"
@@ -349,6 +353,25 @@ def _number(text):
         return int(str(text).strip().lstrip("+") or 0)
     except ValueError:
         return 0
+
+
+def _whole(text):
+    """The value as a whole number, or None if it is not simply one.
+
+    `_number` settles at zero for anything it cannot read, which is right for
+    a modifier - a stat that says "a bit" adds nothing. It is wrong here:
+    taking damage writes the answer back over the box it read, and turning
+    "26 (bloodied)" or "18/24" into a bare number would throw away what the
+    person actually wrote.
+    """
+    try:
+        return int(str(text).strip().lstrip("+"))
+    except ValueError:
+        return None
+
+
+def _is_hp_stat(name):
+    return str(name).strip().lower() in HP_STATS
 
 
 def _init_score(text):
@@ -1773,6 +1796,19 @@ class Encounters:
                        lambda _e, c=creature, i=index, w=field:
                        self._edit_stat(c, i, w))
 
+            if _is_hp_stat(stat):
+                # Damage taken, rather than the number left. Nobody at a
+                # table works out 26 minus 7 and types 19 - they say "seven
+                # damage", so that is what this takes.
+                tk.Label(row, text="DMG", font=self.f["label"],
+                         bg=self.t["panel"], fg=self.t["muted"]).pack(
+                             side="left", padx=(8, 4))
+                hit = self._entry(row, 5)
+                hit.pack(side="left", ipady=3)
+                hit.bind("<Return>",
+                         lambda _e, c=creature, i=index, w=hit, f=field:
+                         self._take_damage(c, i, w, f))
+
             spec = self._stat_spec(creature, stat, value)
             if spec is not None:
                 self._tiny(row, "roll", lambda c=creature, i=index:
@@ -1793,6 +1829,12 @@ class Encounters:
                  font=self.f["label"], bg=self.t["panel"], fg=self.t["muted"],
                  anchor="w", wraplength=230,
                  justify="left").pack(fill="x", padx=8, pady=(6, 0))
+        if any(_is_hp_stat(name) for name, _v in creature["stats"]):
+            tk.Label(frame, text="Put damage in DMG and press Enter to take "
+                     "it off. A minus heals.", font=self.f["label"],
+                     bg=self.t["panel"], fg=self.t["muted"], anchor="w",
+                     wraplength=230, justify="left").pack(
+                         fill="x", padx=8, pady=(2, 0))
         self._bind_wheel(frame, self.stat_canvas)
 
     def _build_log(self, parent, creature):
@@ -1822,6 +1864,51 @@ class Encounters:
         box.configure(state="disabled")
         self.roll_log = box
         self._render_log()
+
+    def _take_damage(self, creature, index, box, field):
+        """Enter in the DMG box: that much off the hit points.
+
+        Only ever a subtraction, so a minus heals without needing a second
+        box for it. Both numbers have to read as whole numbers - the answer
+        is written back over the hit points, and a stat that says "18/24" is
+        not something to overwrite with a guess.
+        """
+        if index >= len(creature["stats"]):
+            return
+        try:
+            typed = box.get().strip()
+        except tk.TclError:
+            return
+        if not typed:
+            return
+        amount = _whole(typed)
+        name, value = creature["stats"][index]
+        before = _whole(value)
+        if amount is None or before is None:
+            trouble = ("that damage is not a number" if amount is None
+                       else f"{name} is not a plain number")
+            self._log(f"{creature['name']} - nothing taken", [],
+                      notes=[trouble])
+            return
+        if amount == 0:
+            box.delete(0, "end")
+            return
+
+        after = before - amount
+        creature["stats"][index][1] = str(after)
+        field.delete(0, "end")
+        field.insert(0, str(after))
+        box.delete(0, "end")
+        if amount > 0:
+            title = f"{creature['name']} - {amount} damage"
+            detail = f"{before} - {amount}"
+            tag = "fumble"
+        else:
+            title = f"{creature['name']} - {-amount} healed"
+            detail = f"{before} + {-amount}"
+            tag = "crit"
+        self._log(title, [_line("", detail, after, tag)])
+        self.schedule_save()
 
     def _roll_stat(self, creature, index):
         if index >= len(creature["stats"]):
