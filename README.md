@@ -16,7 +16,7 @@ home, and your campaigns are plain files in a folder you can copy anywhere.
 
 ### Windows: the easy way
 
-1. Download `Bredmyj-VTT-1.4.0-windows.zip` from the
+1. Download `Bredmyj-VTT-1.4.1-windows.zip` from the
    [releases page](../../releases/latest).
 2. Unzip it anywhere — Desktop, Documents, a memory stick.
 3. Double-click **Bredmyj's VTT.exe**.
@@ -634,4 +634,4 @@ nothing needs installing at the other end.
 
 ---
 
-Version 1.4.0. See [RELEASE.md](RELEASE.md) for what changed.
+Version 1.4.1. See [RELEASE.md](RELEASE.md) for what changed.

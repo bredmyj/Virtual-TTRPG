@@ -1,4 +1,4 @@
-# Bredmyj's VTT — v1.4.0
+# Bredmyj's VTT — v1.4.1
 
 A desktop virtual tabletop for solo and small-group RPGs. Dice, a dungeon
 map you can build and run live, a journal, and LAN or server multiplayer —
@@ -168,7 +168,7 @@ Once you're in:
 
 Everyone in a session is version-checked, so you'll be told if someone's on
 a different build rather than finding out the hard way. **Everyone at the
-table needs 1.4.0** — anyone on an older build will be turned away with a
+table needs 1.4.1** — anyone on an older build will be turned away with a
 message saying which version to get.
 
 ### Servers
