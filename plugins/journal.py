@@ -19,6 +19,8 @@ import math
 import tkinter as tk
 from tkinter import colorchooser, font as tkfont, messagebox, simpledialog
 
+import dice_api
+
 PLUGIN = {
     "name": "Adventuring Journal",
     "version": "2.0",
@@ -323,7 +325,7 @@ class Journal:
 
     def _bind_wheel(self, widget, canvas):
         def scroll(event):
-            canvas.yview_scroll(-int(event.delta / 120), "units")
+            canvas.yview_scroll(dice_api.wheel_steps(event), "units")
             return "break"
         widget.bind("<MouseWheel>", scroll)
         for child in widget.winfo_children():

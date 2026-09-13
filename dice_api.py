@@ -39,6 +39,20 @@ rng = random.SystemRandom()
 D20_WEIGHTS = {face: (4 if face <= 10 else 6) for face in range(1, 21)}
 
 
+def wheel_steps(event):
+    """How many lines one turn of the mouse wheel should scroll.
+
+    Windows sends 120 per notch. A Mac sends 1 or 2, so dividing by 120 there
+    gives zero and nothing moves at all. Either way this gives whole lines,
+    and never zero for a real turn of the wheel.
+    """
+    delta = getattr(event, "delta", 0)
+    if not delta:
+        return 0
+    steps = int(delta / 120) if abs(delta) >= 120 else (1 if delta > 0 else -1)
+    return -steps
+
+
 def weighted_roll(weights):
     """Roll one face from a {face: percent} table.
 
@@ -64,6 +78,7 @@ import paths
 
 VERSION = paths.VERSION
 APP_DIR = paths.APP_DIR
+MAC = paths.MAC
 PLUGIN_DIR = os.path.join(APP_DIR, "plugins")
 DATA_DIR = os.path.join(APP_DIR, "data")      # pre-campaign layout, migrated once
 SAVES_DIR = os.path.join(APP_DIR, "saves")

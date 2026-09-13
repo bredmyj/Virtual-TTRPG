@@ -19,6 +19,13 @@ import sys
 VERSION = "1.4.0"
 APP_NAME = "Bredmyj's VTT"
 
+# Which machine this is. Asked here rather than each module working it out,
+# for the same reason the paths are: one answer everywhere. The app is built
+# and tested on Windows; MAC is what the handful of places that have to differ
+# switch on, and everything else is the same code.
+MAC = sys.platform == "darwin"
+WINDOWS = sys.platform.startswith("win")
+
 
 def _app_dir():
     if getattr(sys, "frozen", False):

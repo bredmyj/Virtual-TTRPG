@@ -59,6 +59,7 @@ class DiceRoller(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         self._build_fonts()
+        self._mac_right_click()
         for i, sides in enumerate(CORE_DICE):
             # The d20 is weighted - see D20_WEIGHTS in dice_api.py.
             self.register_die(Die(key=f"d{sides}", label=f"d{sides}",
@@ -134,16 +135,60 @@ class DiceRoller(tk.Tk):
         self.session.close()
         self.restart()
 
+    def _mac_right_click(self):
+        """Make the right mouse button reach the menus, on a Mac.
+
+        Tk on macOS calls the right button Button-2 and the middle one
+        Button-3 - the opposite way round from everywhere else. Every context
+        menu in this app and its mods is bound to Button-3, so on a Mac not
+        one of them could be opened.
+
+        Rather than bind a second button in thirty-odd places, a right-click
+        anywhere in the app is turned into the Button-3 the widget under the
+        pointer is already listening for. Bound to `all`, so it covers the
+        map, the journal and anything a mod opens later without their knowing
+        about it. Does nothing at all on Windows.
+        """
+        if not paths.MAC:
+            return
+
+        def relay(event):
+            try:
+                event.widget.event_generate(
+                    "<Button-3>", x=event.x, y=event.y,
+                    rootx=event.x_root, rooty=event.y_root)
+            except tk.TclError:
+                pass        # the widget went, or will not take a fake event
+
+        self.bind_all("<Button-2>", relay, add="+")
+
+    def _family(self, *wanted):
+        """The first of these the machine actually has.
+
+        Segoe UI and Consolas are Windows fonts. Asking a Mac for one gets
+        whatever Tk decides to substitute, which is rarely close, so the list
+        runs best-first across platforms and the first one installed wins.
+        """
+        have = {name.lower() for name in tkfont.families()}
+        for name in wanted:
+            if name.lower() in have:
+                return name
+        return wanted[-1]
+
     def _build_fonts(self):
         # Deliberately small. This is meant to sit beside the map as a tool,
         # not to fill a quarter of the screen - and every mod draws with
         # these same fonts, so the panels come down with it.
-        self.f_title = tkfont.Font(family="Segoe UI", size=11, weight="bold")
-        self.f_label = tkfont.Font(family="Segoe UI", size=8)
-        self.f_die = tkfont.Font(family="Segoe UI", size=10, weight="bold")
-        self.f_roll = tkfont.Font(family="Segoe UI", size=12, weight="bold")
-        self.f_result = tkfont.Font(family="Consolas", size=9)
-        self.f_total = tkfont.Font(family="Segoe UI", size=22, weight="bold")
+        ui = self._family("Segoe UI", "SF Pro Text", "Helvetica Neue",
+                          "DejaVu Sans", "Helvetica")
+        mono = self._family("Consolas", "SF Mono", "Menlo", "DejaVu Sans Mono",
+                            "Courier")
+        self.f_title = tkfont.Font(family=ui, size=11, weight="bold")
+        self.f_label = tkfont.Font(family=ui, size=8)
+        self.f_die = tkfont.Font(family=ui, size=10, weight="bold")
+        self.f_roll = tkfont.Font(family=ui, size=12, weight="bold")
+        self.f_result = tkfont.Font(family=mono, size=9)
+        self.f_total = tkfont.Font(family=ui, size=22, weight="bold")
         self.fonts = {
             "title": self.f_title, "label": self.f_label, "die": self.f_die,
             "roll": self.f_roll, "result": self.f_result, "total": self.f_total,
