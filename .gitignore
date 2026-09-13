@@ -22,6 +22,7 @@ __pycache__/
 #   mods.json    - your settings
 #   servers.json - the servers you have added, and any passwords with them
 #   server.json  - what your own server calls itself, and its password
+#   shared_encounters.json - the fights you keep for every campaign
 saves/
 faces/
 cursors/
@@ -30,6 +31,7 @@ profile.png
 mods.json
 servers.json
 server.json
+shared_encounters.json
 selfcheck.txt
 
 # Windows shortcuts point at wherever the folder happened to be, so they
