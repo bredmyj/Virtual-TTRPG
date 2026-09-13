@@ -91,6 +91,26 @@ App Store. **Control-click** it, choose **Open**, and it stops asking.
 Run that command again if you ever move the app folder — the shortcut
 remembers where the folder was.
 
+#### If the app does not start, or quits by itself
+
+An app started from the Finder has nowhere to print to, so it keeps a log:
+
+    ~/Library/Logs/Bredmyj VTT.log
+
+It records which Python was used, its version, the Tk version and the macOS
+version, then everything the app prints. If it stops with an error the log
+opens by itself and a dialog says so — it will not just vanish. Send that log
+and the fault can be found.
+
+**If it quits at random while you are playing**, look at the `tk:` line near
+the top of the log. Tk **8.5** is the one Apple ships with the system
+`python3`: it is a decade old, unsupported on current macOS, and crashes
+unpredictably. Install Python from
+[python.org](https://www.python.org/downloads/) — it brings a newer Tk with
+it — then make the shortcut again. The shortcut already prefers a newer Tk
+over the system one where it can find both, and warns you if the old one is
+all there is.
+
 #### Or double-click launcher.command
 
 `launcher.command` starts it too, and checks Python first. It needs making
