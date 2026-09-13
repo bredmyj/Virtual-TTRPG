@@ -70,15 +70,37 @@ once.
 That is the way that always works, and it is worth using at least once so you
 know the app itself is fine before touching anything else.
 
-#### Making it a double-click
+#### Put it on the desktop, and stop using Terminal
 
-`launcher.command` does the same thing and checks Python for you first. Run
-this once, in Terminal, in the same folder as before:
+Once it has opened, make yourself a proper Mac app. One command, once, in
+Terminal in that same folder:
 
-    chmod +x launcher.command "Run Server.command"
+    python3 make_shortcut.py --desktop
+
+That builds **Bredmyj's VTT.app** on your desktop. Double-click it like any
+other program: no Terminal, nothing to make runnable, and it carries the
+app's own icon.
+
+This is the way to do it, not just the tidy way. A `.app` is opened by the
+system itself, so unlike a `.command` file no editor can claim it, and the
+permission bit is set as it is built rather than having to survive a zip.
+
+The first open may ask whether you are sure, because it did not come from the
+App Store. **Control-click** it, choose **Open**, and it stops asking.
+
+Run that command again if you ever move the app folder — the shortcut
+remembers where the folder was.
+
+#### Or double-click launcher.command
+
+`launcher.command` starts it too, and checks Python first. It needs making
+runnable once, in Terminal, in that folder:
+
+    chmod +x launcher.command "Run Server.command" "Create Shortcut.command"
 
 After that, double-click **launcher.command** in Finder. A Terminal window
-opens alongside the app; that is normal, and closing it closes the app.
+opens alongside the app; that is normal, and closing it closes the app. If it
+opens in an editor instead, see the next section.
 
 #### It opens in VS Code and shows the code instead of running
 
