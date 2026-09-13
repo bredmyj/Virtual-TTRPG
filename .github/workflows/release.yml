@@ -1,0 +1,112 @@
+# Push a tag, get a release.
+#
+# The point of this is that the download is always named after the version
+# that is actually in it. The version is read out of paths.py rather than
+# typed here, so there is one place it is ever written down and the zip on
+# the releases page cannot drift away from it.
+#
+#   git tag -a V1.4.2 -m "..."     and     git push origin V1.4.2
+#
+# builds the Windows app on a clean machine, zips it as
+# Bredmyj-VTT-1.4.2-windows.zip, and publishes a release on that tag with the
+# zip attached. Nothing to build locally and nothing to upload by hand.
+#
+# It can also be run from the Actions tab (Run workflow) without a tag, which
+# builds the zip and leaves it as a downloadable artifact rather than making
+# a release - useful for checking a build before tagging anything.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "V*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # tag annotations, for the release body
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install what the build needs
+        run: python -m pip install --upgrade pip pyinstaller pillow
+
+      - name: Check it all compiles
+        run: python -m compileall -q . -x "dist|build|__pycache__"
+
+      - name: Read the version out of paths.py
+        id: version
+        shell: bash
+        run: echo "number=$(python -c 'import paths; print(paths.VERSION)')" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: python build.py
+
+      - name: Zip it, named after the version
+        id: zip
+        shell: bash
+        env:
+          NUMBER: ${{ steps.version.outputs.number }}
+        run: |
+          python - "$NUMBER" <<'PY'
+          import os, sys, zipfile
+          number = sys.argv[1]
+          root = os.path.join("dist", "Bredmyj's VTT")
+          out = os.path.join("dist", "Bredmyj-VTT-%s-windows.zip" % number)
+          with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+              for base, _dirs, files in os.walk(root):
+                  for name in sorted(files):
+                      full = os.path.join(base, name)
+                      inside = os.path.relpath(full, "dist").replace(os.sep, "/")
+                      z.write(full, inside)
+          print("wrote", out, "%.1f MB" % (os.path.getsize(out) / 1048576.0))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write("path=%s\n" % out.replace(os.sep, "/"))
+          PY
+
+      # No tag: leave the zip where it can be downloaded and looked at,
+      # rather than publishing anything.
+      - name: Keep the build
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bredmyj-VTT-${{ steps.version.outputs.number }}-windows
+          path: ${{ steps.zip.outputs.path }}
+
+      # A tag: publish it. The release body is the tag's own message, which
+      # is where the description of a version belongs anyway.
+      - name: Publish the release
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          ZIP: ${{ steps.zip.outputs.path }}
+        run: |
+          git tag -l --format='%(contents)' "$TAG" > notes.md
+          if [ ! -s notes.md ]; then
+            echo "See RELEASE.md for what changed." > notes.md
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --clobber
+          else
+            gh release create "$TAG" "$ZIP" \
+              --title "Bredmyj's VTT ${{ steps.version.outputs.number }}" \
+              --notes-file notes.md
+          fi
+
+      - name: Say where it went
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+        shell: bash
+        run: echo "Published ${{ github.ref_name }} with Bredmyj-VTT-${{ steps.version.outputs.number }}-windows.zip"

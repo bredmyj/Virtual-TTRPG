@@ -58,14 +58,47 @@ once.
    the part that draws the windows, and Homebrew's does not.
 
 3. **Download the source zip** from the
-   [releases page](../../releases/latest) and unzip it wherever you want to
-   keep it.
+   [releases page](../../releases/latest) — the one called **Source code
+   (zip)** — and unzip it wherever you want to keep it.
 
-4. **Double-click `launcher.command`** in that folder. A Terminal window opens
-   alongside the app — that is normal, and closing it closes the app.
+4. **Start it.** Back in Terminal, type `cd` and a space, then **drag the
+   unzipped folder onto the Terminal window** — the path types itself in —
+   and press return. Then:
 
-macOS will probably stop you on step 4 the first time. That is Gatekeeper, and
-getting past it is the next section.
+       python3 dice_roller.py
+
+That is the way that always works, and it is worth using at least once so you
+know the app itself is fine before touching anything else.
+
+#### Making it a double-click
+
+`launcher.command` does the same thing and checks Python for you first. Run
+this once, in Terminal, in the same folder as before:
+
+    chmod +x launcher.command "Run Server.command"
+
+After that, double-click **launcher.command** in Finder. A Terminal window
+opens alongside the app; that is normal, and closing it closes the app.
+
+#### It opens in VS Code and shows the code instead of running
+
+Very common, and nothing to do with this program. Some editors — VS Code
+among them — register themselves as the app for shell scripts, so macOS opens
+`launcher.command` for editing rather than running it. Right-click → *Open*
+does the same thing, because it is still opening it in the same app.
+
+1. Right-click `launcher.command` and choose **Get Info**.
+2. Find the **Open with:** section and open the dropdown.
+3. Pick **Terminal**. If it is not listed, choose **Other...**, change
+   *Enable:* at the bottom to **All Applications**, then go to
+   **Applications → Utilities → Terminal**.
+4. Click **Change All...** underneath, and confirm.
+5. Close the Get Info window and double-click `launcher.command` again.
+
+*Open With → Python* is not an option and would not work — `launcher.command`
+is a shell script, not Python. The thing that runs the Python is
+`dice_roller.py`, and `python3 dice_roller.py` in Terminal is the way to do
+that directly.
 
 #### macOS says it cannot be opened
 
@@ -89,10 +122,14 @@ macOS remembers, so this is once only.
 3. Click **Open Anyway**, enter your password, then double-click
    `launcher.command` again.
 
-**Double-clicking does nothing at all?** The unzip dropped the mark that says
-the file may be run. In Terminal, `cd` to the folder and run:
+**Double-clicking does nothing at all**, or Terminal says *permission
+denied*? The unzip dropped the mark that says the file may be run. In
+Terminal, in that folder:
 
     chmod +x launcher.command "Run Server.command"
+
+None of this applies to `python3 dice_roller.py`, which needs no permission
+and no unblocking. If a Mac is being awkward, that is the way through.
 
 #### Using it on a Mac
 
@@ -102,8 +139,8 @@ Everything below works the same, with three differences:
   There are context menus all through this app, so it is worth knowing.
 - Where these notes say **Ctrl-click** to pick several of something, use
   **Command-click**.
-- To host a game, double-click **Run Server.command** rather than
-  **Run Server.bat**.
+- To host a game, run `python3 server.py` in Terminal, or double-click
+  **Run Server.command** once it has been made runnable.
 
 Mac support is new and not as well travelled as the Windows side. If something
 looks wrong, say so on the issues page.
