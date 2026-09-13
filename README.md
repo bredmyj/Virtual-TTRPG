@@ -5,8 +5,8 @@ you can build and run live, a journal, solo oracles, and multiplayer over a
 network or the internet — in one window, on your own machine, with no account
 and no subscription.
 
-Windows. Nothing to sign up for, nothing phones home, and your campaigns are
-plain files in a folder you can copy anywhere.
+Windows, or a Mac running the Python. Nothing to sign up for, nothing phones
+home, and your campaigns are plain files in a folder you can copy anywhere.
 
 **[Download the latest release →](../../releases/latest)**
 
@@ -14,7 +14,7 @@ plain files in a folder you can copy anywhere.
 
 ## Getting it running
 
-### The easy way
+### Windows: the easy way
 
 1. Download `Bredmyj-VTT-1.4.0-windows.zip` from the
    [releases page](../../releases/latest).
@@ -27,7 +27,7 @@ No Python, no install, no administrator rights.
 > That is SmartScreen noticing the program is not code-signed, which costs
 > money to do. Click **More info** → **Run anyway**.
 
-### From source
+### Windows: from source
 
 If you would rather run the Python:
 
@@ -40,8 +40,91 @@ Needs Python 3 (with Tkinter, which the standard installer includes). Pillow
 is optional — without it you lose profile pictures and portraits, and
 everything else works.
 
-The whole folder can be moved or copied wherever you like. Campaigns,
-profiles and pictures travel with it.
+### On a Mac
+
+There is no packaged build for macOS, so a Mac runs the Python. Five minutes,
+once.
+
+1. **Check for Python.** Open **Terminal** — press Command-Space, type
+   `terminal`, press return — then type this and press return:
+
+       python3 --version
+
+   If it prints 3.8 or higher, skip to step 3.
+
+2. **Install Python.** Get it from
+   [python.org/downloads](https://www.python.org/downloads/), open the `.pkg`
+   and click through. Use that installer rather than Homebrew: it includes
+   the part that draws the windows, and Homebrew's does not.
+
+3. **Download the source zip** from the
+   [releases page](../../releases/latest) and unzip it wherever you want to
+   keep it.
+
+4. **Double-click `launcher.command`** in that folder. A Terminal window opens
+   alongside the app — that is normal, and closing it closes the app.
+
+macOS will probably stop you on step 4 the first time. That is Gatekeeper, and
+getting past it is the next section.
+
+#### macOS says it cannot be opened
+
+The message is *"Apple could not verify launcher.command is free of
+malware"*, or *"cannot be opened because it is from an unidentified
+developer"*. It means the file was downloaded rather than bought from the App
+Store. Nothing is wrong with it.
+
+1. **Control-click** `launcher.command` — hold Control and click, or tap it
+   with two fingers.
+2. Choose **Open** from the menu.
+3. Click **Open** in the warning box.
+
+macOS remembers, so this is once only.
+
+**No Open on the menu, or no Open button in the box?**
+
+1. Open **System Settings** → **Privacy & Security**.
+2. Scroll down to **Security**. There is a line saying `launcher.command` was
+   blocked, with an **Open Anyway** button beside it.
+3. Click **Open Anyway**, enter your password, then double-click
+   `launcher.command` again.
+
+**Double-clicking does nothing at all?** The unzip dropped the mark that says
+the file may be run. In Terminal, `cd` to the folder and run:
+
+    chmod +x launcher.command "Run Server.command"
+
+#### Using it on a Mac
+
+Everything below works the same, with three differences:
+
+- **Right-click** means a two-finger tap on the trackpad, or Control-click.
+  There are context menus all through this app, so it is worth knowing.
+- Where these notes say **Ctrl-click** to pick several of something, use
+  **Command-click**.
+- To host a game, double-click **Run Server.command** rather than
+  **Run Server.bat**.
+
+Mac support is new and not as well travelled as the Windows side. If something
+looks wrong, say so on the issues page.
+
+### iPhone and iPad
+
+It does not run on them, and it cannot be made to.
+
+This is a desktop program that draws its own windows. iOS only runs apps
+installed from the App Store and built a completely different way, so there is
+nothing to download, nothing to sideload, and no setting to change. Putting it
+on an iPad would mean writing it again from scratch as a different kind of
+app.
+
+An iPad cannot join a game hosted on a computer either — everyone at the table
+needs this same program. To use it, run it on a Mac or a PC.
+
+---
+
+The whole folder can be moved or copied wherever you like. Campaigns, profiles
+and pictures travel with it.
 
 ---
 
@@ -94,11 +177,10 @@ title bar shows which one you are in.
 **Tools → Encounters...** opens it in its own window, split down the middle.
 
 **The roster, on the left.** *Roll Initiative* sits above the two add buttons —
-it is the one you reach for once the room is assembled. *+ Add creature* drops
-down your library (a handful of stock creatures to begin with) plus **New
-creature...** for one you make up on the spot. A creature in an encounter is a
-copy, so wounding the goblin here never touches the goblin in the library. A
-second Goblin is called Goblin 2, so the turn order is never ambiguous.
+it is the one you reach for once the room is assembled. A creature in an
+encounter is a copy, so wounding the goblin here never touches the goblin in
+the library. A second Goblin is called Goblin 2, so the turn order is never
+ambiguous.
 
 *+ Add player* offers the characters already standing on the **game map**, each
 with whoever they belong to — *Boon - Marshell* — and brings their stats across.
@@ -106,10 +188,88 @@ Under those come the people at the table who have no character yet, listed with
 their seat. **Player by hand...** asks for a name and an initiative bonus.
 Players are marked **PC** in the roster.
 
-**The stat block, on the right.** Click a creature to see its numbers. The name
-and every value are typed straight into. **Right-click** the stats to *add*,
-*rename* or *remove* one — a creature carries whatever stats your game needs,
-not a fixed list. *Save to library* stores it for next time.
+### Adding creatures
+
+*+ Add creature* turns the left-hand side into the library. Sixteen creatures
+are in it to begin with — bat, stirge, giant rat, kobold, goblin, skeleton,
+zombie, wolf, boar, giant spider, bandit, guard, hobgoblin, orc, ogre and a
+human fighter — each with its ability scores, its attacks and a line on what it
+is. Click one and it opens on the right: everything it carries, before it goes
+anywhere.
+
+Along the bottom: **How many**, with up and down arrows, and **Add** right
+beside them. Set it to 3, press *Add 3 x Goblin*, and three of them go in and
+the list comes straight back. Double-click an entry to add one without
+touching the arrows. *New creature...* makes one from scratch. **Right-click**
+an entry to rename it or delete it.
+
+The library is per campaign and it grows: *Save to library*, on the right-click
+menu of anything in the encounter, keeps that creature — scores, attacks,
+description and all — for next time.
+
+### The creature, on the right
+
+Click a creature to open it. The name and every value are typed straight into.
+
+**Ability scores** sit at the top, each with the modifier it is worth beside
+it, worked out as you type — 10 is +0, 19 is +4, 7 is -2. Nothing to keep in
+step by hand: hand something a belt of giant strength, put 19 in STR, and every
+attack built on STR moves with it. **roll** beside a score rolls a d20 and adds
+its modifier.
+
+**Stats** are whatever your game needs. **Right-click** to *add*, *rename* or
+*remove* one — there is no fixed list.
+
+Beside **HP** is a second, smaller box marked **DMG**. Put the damage in it and
+press Enter, and it comes off the hit points: 59, take 17, and the box reads
+42. Nobody at a table works out the subtraction and types the answer — they
+say "seventeen damage" — so that is what this takes. A **minus heals**, so
+`-8` puts eight back. Every hit goes into the roll log with its arithmetic, so
+you can see how a creature got to where it is. It will go below zero rather
+than stop at it, and it leaves an HP box that isn't a plain number — `18/24`,
+say — completely alone. Anything that reads as a roll gets a
+**roll** of its own: a value with dice in it (`1d6+2`) rolls those dice, and a
+value that is a modifier on a stat named like a check (`Attack`, `Init Mod`,
+anything ending in *bonus*, *save* or *check*) rolls a d20 and adds it. For
+anything else, right-click → *Roll ... with...* and say which die, and which
+ability score's modifier goes on top.
+
+**What it can do** is the list of attacks and saves.
+
+- An **attack** carries a to-hit bonus and damage dice, and either can be tied
+  to an ability score — write the whole bonus in the way a stat block prints
+  it, or give it `+2` proficiency and pick STR and let it work itself out.
+  Clicking it rolls the d20 to hit *and* the damage, in one go.
+- A **save** is a number for the players to beat, so nothing is rolled for it:
+  the DC, which save it is, and what happens on a fail or a success are shown.
+  If it does damage, *roll dmg* rolls that much and no more.
+
+**Rolls** is the log beside the stats. Every roll made in this window lands
+there, newest on top — what was rolled, what was added, and the total, with a
+natural 20 in green and a 1 in red. It keeps the last forty and holds still
+when you click a different creature, so you can look back over the round
+without leaving the fight. *clear* empties it. Everything also goes to **Roll
+History** in the main window with the rest of the day's dice.
+
+**Description**, underneath, is a few lines on the creature — what it looks
+like, how it fights, what it wants.
+
+### Systems
+
+The button at the top right of the panel — *Dungeons & Dragons* to begin with —
+is which game these numbers belong to. A system says which ability scores exist,
+what a score is worth, and what a creature made from scratch starts with.
+
+*Dungeons & Dragons* has STR, DEX, CON, INT, WIS and CHA on the 10-is-average
+table. *Plain Numbers* has no scores at all: the number you type is the modifier.
+Make your own for anything else — click the button, *New system...*, name it,
+add and remove abilities, and set the stat rows a new creature begins with.
+
+Switching system changes what is offered from then on. It never touches a
+creature that already exists: anything it carries that the new system has not
+heard of is still shown, and still rolls.
+
+### Initiative, and running the fight
 
 **Initiative.** *Roll Initiative* gives every creature its own d20. For a gang
 that acts together, **Ctrl-click** the ones you want, **right-click**, and pick
@@ -126,13 +286,51 @@ column without it shuffling under you. Correcting a number mid-fight re-sorts
 the order but leaves the turn with whoever is up.
 
 **What's going on.** A few lines along the bottom for the situation — who
-started it, what the room looks like, what everyone is standing on. It is kept
-with the campaign like everything else.
+started it, what the room looks like, what everyone is standing on.
+
+**Treasure and rewards**, under it, is the other end of the same fight: what
+the party walks away with. Coin, what was on the bodies, the thing in the
+locked chest, the favour owed by whoever you rescued. Write it while you are
+setting the fight up, or fill it in once it is won. Both boxes are kept with
+the campaign like everything else.
 
 **Running it.** *Run Encounter* rolls for anyone still without a count and opens
 the turn bar underneath the summary: the round, whose turn it is, and who is up
 next. **Next** hands the turn on and lifts that creature to the top of the
 roster; a full cycle ticks the round over. *End* puts it away.
+
+### Saving an encounter for later
+
+A fight you built once is worth keeping. **File** in the Encounters window:
+
+- **New encounter** — clears the board for the next one.
+- **Save encounter** / **Save encounter as...** — keeps it under a name.
+  *Treeline Ambush*, *Spiders in the Mill Loft* — whatever you will be
+  looking for when you come back to it. The name sits over the roster and in
+  the window's title bar, so you always know which one is open.
+- **Load encounter** — every one you have saved, in a list. Pick one and it
+  comes back: the creatures, what's going on, and the treasure.
+- **Saved encounters...** — the rest of it. *Rename* one whose name stopped
+  making sense, *Duplicate* one to change a little rather than build again,
+  *Delete* one, and *Share* one.
+
+A saved encounter is a **prepared** fight, not one halfway through: initiative
+counts are not kept, so a loaded encounter always starts with nobody having
+rolled. *Roll Initiative* is right there.
+
+You are never asked to save something twice. Starting a new encounter or
+loading another one writes the open one back to its name first, on its own.
+Only an encounter that has never been named stops to ask.
+
+**Sharing across campaigns.** The *Save it for every campaign* box, on the
+save dialog and as *Share* in the manager, moves an encounter out of the
+campaign and onto a shelf every campaign can see — a bar fight, a road patrol,
+the thing that turns up whenever the party takes too long. Campaign
+encounters live in the campaign folder; shared ones live in
+`shared_encounters.json` beside the program, and travel with the folder like
+everything else. There is only ever one copy of a shared encounter, so saving
+over it changes the one every campaign gets. *Keep here* pulls it back into
+the campaign that is open.
 
 ---
 

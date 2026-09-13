@@ -4,8 +4,8 @@ A desktop virtual tabletop for solo and small-group RPGs. Dice, a dungeon
 map you can build and run live, a journal, and LAN or server multiplayer —
 in one window, on your own machine, with no account and no subscription.
 
-Windows. Python 3 and Tkinter, plus Pillow for pictures. A packaged build
-needs none of that.
+Windows, or a Mac running the source. Python 3 and Tkinter, plus Pillow for
+pictures. The packaged Windows build needs none of that.
 
 ---
 
@@ -19,6 +19,15 @@ rights.
 It looks for Python, tells you exactly where to get it if it's missing, and
 offers to install Pillow for you. Run **Create Shortcut.bat** once and you
 get a proper desktop shortcut with an icon.
+
+**On a Mac** — install Python from python.org, then double-click
+**launcher.command**. macOS will block it the first time for being
+downloaded rather than bought; Control-click the file and choose **Open**,
+and it stops asking. Full steps, including what to do when there is no
+*Open* on that menu, are in the README.
+
+**Not on an iPhone or iPad.** This is a desktop program that draws its own
+windows, and iOS does not run that kind of app at all.
 
 The whole folder can be moved or copied wherever you like — saves, profiles
 and pictures all travel with it.
@@ -85,21 +94,48 @@ bars each.
 
 Build a fight and run it, in its own window. A roster on the left, the
 selected creature's stat block on the right, a few lines on what is going on
-underneath, and — once it is running — a turn bar showing the round and whose
-turn it is.
+and what comes of it underneath, and — once it is running — a turn bar showing
+the round and whose turn it is.
 
-- **A library per campaign.** Add creatures from it, or invent one on the
-  spot and *Save to library* for next time. A creature in an encounter is a
-  copy, so wounding the goblin here leaves the library entry untouched, and a
-  second Goblin is named Goblin 2 so the turn order is never ambiguous.
+- **A library per campaign**, sixteen creatures deep to begin with — bat up to
+  ogre, each with its ability scores, its attacks and a line on what it is.
+  *+ Add creature* turns the roster into the library: click one to look it
+  over, set **How many** with the arrows, and *Add 3 x Goblin* puts three in
+  and comes straight back. A creature in an encounter is a copy, so wounding
+  the goblin here leaves the library entry untouched, and a second Goblin is
+  named Goblin 2 so the turn order is never ambiguous. *Save to library* keeps
+  one of your own — scores, attacks, description and all.
 - **Players come off the game map**, each with whoever they belong to and
   their stats brought across, along with anyone at the table who has no
   character yet. Or add one by hand with a name and an initiative bonus.
+- **Ability scores that do the arithmetic.** Each score shows the modifier it
+  is worth as you type it — 10 is +0, 19 is +4. Tie an attack to STR and a
+  belt of giant strength moves its to-hit and its damage on its own.
+- **Attacks and saves you can click.** An attack rolls the d20 to hit and the
+  damage together. A save is the players' number to beat, so it shows the DC,
+  which save it is, and what happens either way — and rolls only the damage.
+- **A roll log beside the stats**, newest on top, keeping the last forty —
+  what was rolled, what was added and the total, with a natural 20 in green
+  and a 1 in red.
 - **Whatever stats your game needs.** Right-click the stat block to add,
-  rename or remove one — there is no fixed list.
+  rename or remove one — there is no fixed list. Anything that reads as a roll
+  gets a **roll** beside it, and you can pin a die and an ability score to
+  anything that does not.
+- **A DMG box beside the hit points.** Type the damage, press Enter, and it
+  comes off. A minus heals, and every hit is logged with its arithmetic.
+- **A description** on every creature, and **system presets** — which ability
+  scores exist and what a score is worth — with Dungeons & Dragons set up and
+  room to make your own.
+- **What's going on** and **Treasure and rewards** along the bottom: the two
+  ends of a fight, one written before it starts and one once it is won.
 - **Initiative, singly or in gangs.** Every creature gets its own d20, or
   Ctrl-click a group and roll one d20 for the lot of them, each still adding
   its own modifier.
+- **Encounters saved under a name**, from a **File** menu of its own: build a
+  fight once, name it, and load it back when the party gets there. Rename,
+  duplicate and delete them from one place, and mark the ones worth reusing
+  as available to every campaign rather than just the one they were built
+  for.
 
 ### Solo tools
 
@@ -200,6 +236,113 @@ and the same goblin can be pulled in again next week at full health. Stats
 are whatever the creature carries — right-click to add, rename or remove
 one — so it does not assume your system's stat line.
 
+**Creatures worth adding, and a way to add them.** *+ Add creature* now turns
+the roster into the library rather than dropping a menu over it: click an
+entry and it opens on the right — scores, attacks, description — so you can
+look it over before it goes anywhere. Along the bottom sit **How many**, with
+up and down arrows, and **Add** right beside them, so three goblins is two
+clicks and the list comes straight back.
+
+The library ships with sixteen creatures instead of six, from a bat to an
+ogre, each with its ability scores, its attacks and a line on what it is. An
+existing campaign gains the new ones without losing anything it had; the six
+originals fill themselves out unless you had already changed them.
+
+**Numbers that do their own arithmetic.** Every creature now carries ability
+scores, each showing the modifier it is worth as you type — 10 is +0, 19 is
++4, 7 is -2. Tie an attack to STR and a belt of giant strength is one number
+in one box: its to-hit and its damage both follow.
+
+**Things it can do.** Under the stats is a list of attacks and saves. Clicking
+an attack rolls the d20 to hit *and* rolls the damage, in one go. A save is
+the players' number to beat, so nothing is rolled for it — the DC, which save
+it is, and what happens on a fail or a success are shown, and only its damage
+rolls.
+
+**A roll log beside the stats.** Every roll made in the window goes into it,
+newest on top — what was rolled, what was added, the total, a natural 20 in
+green and a 1 in red. It keeps the last forty and stays put when you click a
+different creature, so the round can be read back without leaving the fight.
+Roll History in the main window still gets everything as well.
+
+**Roll beside the numbers.** A stat whose value is dice rolls those dice; a
+stat whose value is a modifier, on something named like a check, rolls a d20
+and adds it. For anything else, right-click it and say which die and which
+ability score to use.
+
+**Systems.** Which ability scores exist, what a score is worth, and what a new
+creature starts with are a preset now, named after the game. Dungeons &
+Dragons is set up, Plain Numbers is there for games without scores, and you
+can build your own — add and remove abilities, and choose whether a score is
+a score or already the modifier. Switching never touches a creature that
+already exists.
+
+**A description** on every creature, under everything else.
+
+**Damage, taken rather than worked out.** Beside the hit points is a small box
+marked **DMG**. Type what the creature just took, press Enter, and it comes
+off — 59, take 17, and the box reads 42. Nobody at a table does the
+subtraction in their head and types the answer, so this does not ask them to.
+A minus heals. Each hit goes into the roll log with the arithmetic behind it,
+red coming off and green going back on, so a creature's whole afternoon reads
+back at a glance.
+
+**Treasure and rewards.** A second box along the bottom, under what is going
+on — what the party walks away with. Coin, what was on the bodies, the thing
+in the locked chest, the favour owed by whoever you rescued.
+
+**Encounters you can keep.** The window has a **File** menu now. Build a
+fight, name it — *Treeline Ambush*, *Spiders in the Mill Loft* — and load it
+back when the party finally gets there, creatures, notes and treasure
+together. The name sits over the roster and in the title bar so you can see
+which one is open.
+
+*Saved encounters...* is the rest of it: rename one whose name stopped making
+sense, duplicate one to change a little rather than build it again, delete
+one. A saved encounter is a prepared fight rather than one halfway through, so
+initiative is not kept with it and a loaded one always starts with nobody
+having rolled.
+
+Nothing has to be saved twice. Starting a new encounter or loading another one
+writes the open one back to its name first; only one that has never been named
+stops to ask.
+
+**And shared across campaigns.** Tick *Save it for every campaign* and an
+encounter moves out of the campaign onto a shelf every campaign can see — the
+bar fight, the road patrol, whatever turns up when the party takes too long.
+Those live in `shared_encounters.json` beside the program, with the profile
+and the server list, and travel with the folder like everything else.
+
+---
+
+## Also new: it runs on a Mac
+
+Less a port than the end of an assumption. Three things took Windows for
+granted, and all three failed quietly rather than loudly:
+
+- **Right-click.** Tk on macOS calls the right mouse button Button-2 and the
+  middle one Button-3 — the opposite way round from everywhere else. Every
+  context menu in this app is bound to Button-3, so on a Mac not one of them
+  would have opened. A right-click anywhere is now turned into the Button-3
+  the widget under the pointer is already listening for, which covers the
+  map, the journal and anything a mod adds later without their knowing.
+- **Scrolling.** Windows sends 120 per notch of the wheel, a Mac sends 1 —
+  so the panels that divided by 120 scrolled by exactly nothing.
+- **Fonts.** Segoe UI and Consolas are Windows fonts. The app now asks for
+  what is installed and takes the first one it finds.
+
+**launcher.command** is the Mac counterpart to launcher.bat: it finds Python,
+checks Tkinter came with it, offers Pillow, and starts the app. **Run
+Server.command** does the same for hosting. Where these notes say Ctrl-click
+to pick several of something, a Mac uses Command-click.
+
+macOS blocks the launcher the first time for having been downloaded rather
+than bought. Control-click it, choose **Open**, and it stops asking; the
+README has the longer way round for when that menu has no *Open* on it.
+
+None of this changes anything on Windows — every one of them is a branch that
+runs only on macOS.
+
 ---
 
 ## New in 1.3.0
@@ -267,8 +410,14 @@ multiplayer.
 
 ## Known limitations
 
-- **Windows only** for the packaged build and the launcher scripts. The
-  Python source has nothing Windows-specific in it beyond those.
+- **The packaged build is Windows only.** A Mac runs the source through
+  **launcher.command**; there is no `.app` to double-click yet, and macOS
+  blocks the launcher once, the first time.
+- **Mac support is new** and has had far less use than the Windows side.
+  Right-click, scrolling and the fonts are handled; anything that looks
+  wrong is worth reporting.
+- **No iOS.** An iPhone or iPad cannot run it and cannot join a game either
+  — every seat at the table needs this same program.
 - **Room blueprints exist for the Sewer only.** Prison, Mines, Dwarven Ruins
   and Deep Dark are set up as regions — terrain generation knows what each
   should be made of — but have no room shapes drawn yet.
