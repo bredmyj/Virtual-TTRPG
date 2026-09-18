@@ -10,10 +10,11 @@ Map. One window, four parts and no tabs:
                               ability scores, its stats, the things it can do
                               and a description. Most numbers have a Roll
                               beside them.
+  * the turn bar (left)     - only there once the encounter is running, at
+                              the foot of the roster above Roll Initiative:
+                              the round, whose turn it is, and Next.
   * the summary (bottom)    - a few lines on what is going on, who started it
                               and what the room looks like.
-  * the turn bar (below it) - only there once the encounter is running: the
-                              round, whose turn it is, and Next.
 
 Creatures in an encounter are copies. Wounding the goblin here never touches
 the goblin in the library, so the same entry can be pulled in again next week
@@ -550,6 +551,7 @@ class Encounters:
 
         for raw in store.get("creatures", []):
             self.creatures.append(self._clean(raw))
+        self._reletter()
         self.library = [_body(raw) for raw in store.get("library", [])
                         if isinstance(raw, dict)]
         if "library" not in store:
@@ -606,6 +608,7 @@ class Encounters:
             "id": str(raw.get("id") or uuid.uuid4().hex[:8]),
             "init": None if init is None else int(init),
             "player": bool(raw.get("player", False)),
+            "base": str(raw.get("base", "") or ""),
         })
         return creature
 
@@ -760,7 +763,6 @@ class Encounters:
         self._build_picker()
         self._build_stats()
         self._build_summary()
-        self._build_runner()
 
     def _heading(self, parent, text):
         return tk.Label(parent, text=text, font=self.f["label"],
@@ -867,11 +869,16 @@ class Encounters:
 
         buttons = tk.Frame(box, bg=self.t["panel"])
         buttons.pack(fill="x", padx=10, pady=(2, 10))
+        # Whose turn it is belongs beside the order it is reading from, not
+        # across the foot of the window, so the turn bar heads this stack and
+        # Next lands right under the list it advances.
+        self._build_runner(buttons)
         # Rolling sits above the adding on purpose: it is the button reached
         # for once the room is assembled, so it wants to be the one nearest
         # the list rather than buried under the two that built it.
-        self._button(buttons, "Roll Initiative", self._roll_all).pack(
-            fill="x", ipady=4)
+        self.roll_button = self._button(buttons, "Roll Initiative",
+                                        self._roll_all)
+        self.roll_button.pack(fill="x", ipady=4)
         adders = tk.Frame(buttons, bg=self.t["panel"])
         adders.pack(fill="x", pady=(4, 0))
         adders.columnconfigure(0, weight=1, uniform="adders")
@@ -1180,21 +1187,81 @@ class Encounters:
         self.save()
 
     # -- adding creatures ---------------------------------------------------
-    def _unique(self, name):
+    def _label(self, index):
+        """0 is A, 25 is Z, and a room with more than twenty-six goblins in
+        it carries on with AA."""
+        letters = ""
+        while True:
+            letters = chr(ord("A") + index % 26) + letters
+            index = index // 26 - 1
+            if index < 0:
+                return letters
+
+    def _unique(self, name, player=False):
         """Two goblins both called Goblin make for a confusing initiative
-        list, so the second one becomes Goblin 2."""
-        taken = {creature["name"] for creature in self.creatures}
-        if name not in taken:
+        list, so they become Goblin A and Goblin B. The one already standing
+        there is relabelled as well - a bare Goblin next to a Goblin B reads
+        as two different things when it is the same creature twice.
+
+        A player is handed straight back. Their name came off the game map
+        and is what ties the figure and the row together, so it is not ours
+        to letter - and it is never one of a set in the first place."""
+        if player:
             return name
-        number = 2
-        while f"{name} {number}" in taken:
-            number += 1
-        return f"{name} {number}"
+        base = str(name)
+        family = [creature for creature in self.creatures
+                  if not creature.get("player")
+                  and self._family(creature) == base]
+        if not family:
+            return base
+        # The whole family is relettered down the roster rather than only the
+        # newcomer, so the set always reads A, B, C - a bare Goblin, or one an
+        # older save numbered, would otherwise sit in the middle of the run.
+        for index, creature in enumerate(family):
+            creature["name"] = f"{base} {self._label(index)}"
+        return f"{base} {self._label(len(family))}"
+
+    def _reletter(self):
+        """Every set of copies on the roster onto its letters. Encounters
+        saved before the letters carry numbers, and one of each is a bare
+        name, so a roster read off disk is relabelled once on the way in
+        rather than sitting in numbers until something is added to it.
+
+        Two things are left alone. Players, because the name came off the
+        game map and renaming the row quietly parts it from the figure. And
+        anyone standing on their own, because a lone name is not ours to
+        shorten - Golem Mark II is not a Golem Mark wearing a label, and
+        from the name alone there is no telling the two apart.
+        """
+        families = {}
+        for creature in self.creatures:
+            if creature.get("player"):
+                continue
+            families.setdefault(self._family(creature), []).append(creature)
+        for base, family in families.items():
+            if len(family) < 2:
+                continue
+            for index, creature in enumerate(family):
+                # Written down as it is worked out, so an older save is
+                # guessed at once and read straight from here after that.
+                creature["base"] = base
+                creature["name"] = f"{base} {self._label(index)}"
+
+    def _family(self, creature):
+        """What this one is a copy of. Stored when it was added, because a
+        name cannot be relied on to give it back: strip a trailing letter and
+        Golem Mark II is a Golem Mark. Only a creature saved before it was
+        written down falls back to reading the name."""
+        return str(creature.get("base") or "") or self._base_name(
+            creature["name"])
 
     def _base_name(self, name):
-        """'Goblin 3' back to 'Goblin', so copies and library entries don't
-        pick up a run of numbers."""
-        return name.rstrip("0123456789 ").strip() or name
+        """'Goblin C' back to 'Goblin', for saves written before the family
+        was kept beside the creature. A guess, and only good enough because
+        it is made once and then written down: encounters from back then used
+        numbers, so a trailing number comes off too."""
+        stripped = re.sub(r"\s+(?:[A-Z]{1,2}|\d+)$", "", name).strip()
+        return stripped or name
 
     def _make(self, body, player=False):
         """Put one creature in the encounter. A copy, always: _body builds
@@ -1202,7 +1269,8 @@ class Encounters:
         entry or the creature this was duplicated from."""
         creature = _body(body, self.system)
         creature["id"] = uuid.uuid4().hex[:8]
-        creature["name"] = self._unique(creature["name"])
+        creature["base"] = creature["name"]
+        creature["name"] = self._unique(creature["name"], player=player)
         creature["init"] = None
         creature["player"] = player
         self.creatures.append(creature)
@@ -1227,7 +1295,7 @@ class Encounters:
     def _duplicate(self, creatures):
         for creature in list(creatures):
             copied = dict(creature)
-            copied["name"] = self._base_name(creature["name"])
+            copied["name"] = self._family(creature)
             self._add(copied, player=creature.get("player", False))
 
     # -- adding players -----------------------------------------------------
@@ -1359,7 +1427,7 @@ class Encounters:
         numbers, so its attacks and its description come back with it."""
         for creature in creatures:
             entry = _body(creature, self.system)
-            entry["name"] = self._base_name(creature["name"])
+            entry["name"] = self._family(creature)
             for index, existing in enumerate(self.library):
                 if existing["name"] == entry["name"]:
                     self.library[index] = entry
@@ -2614,6 +2682,7 @@ class Encounters:
             creature["init"] = None
         self._clear_board()
         self.creatures = creatures
+        self._reletter()
         self.summary = entry["summary"]
         self.treasure = entry["treasure"]
         self.current = {"name": name, "shared": bool(shared)}
@@ -2757,26 +2826,28 @@ class Encounters:
                 pass    # the window has gone; the last read still stands
 
     # -- running the encounter ----------------------------------------------
-    def _build_runner(self):
-        self.runner = tk.Frame(self.win, bg=self.t["panel"])
-        self.runner.grid(row=2, column=0, columnspan=2, sticky="ew",
-                         padx=8, pady=(0, 8))
-        self.runner.grid_remove()
+    def _build_runner(self, parent):
+        """The turn bar, stacked rather than strung out: it lives in a column
+        half a window wide now, so the round and the name take a line each and
+        Next gets the full width. Ending is the Run button below turning into
+        End Encounter, so there is no second End up here."""
+        self.runner = tk.Frame(parent, bg=self.t["panel"])
 
-        self.round_label = tk.Label(self.runner, text="", font=self.f["title"],
+        line = tk.Frame(self.runner, bg=self.t["panel"])
+        line.pack(fill="x")
+        self.round_label = tk.Label(line, text="", font=self.f["title"],
                                     bg=self.t["panel"], fg=self.t["accent"])
-        self.round_label.pack(side="left", padx=(12, 16), pady=10)
-        self.turn_label = tk.Label(self.runner, text="", font=self.f["title"],
-                                   bg=self.t["panel"], fg=self.t["fg"])
-        self.turn_label.pack(side="left")
+        self.round_label.pack(side="left")
+        self.turn_label = tk.Label(line, text="", font=self.f["title"],
+                                   bg=self.t["panel"], fg=self.t["fg"],
+                                   anchor="e")
+        self.turn_label.pack(side="right")
         self.next_label = tk.Label(self.runner, text="", font=self.f["label"],
-                                   bg=self.t["panel"], fg=self.t["muted"])
-        self.next_label.pack(side="left", padx=12)
-        self._button(self.runner, "End", self._end_run,
-                     fg=self.t["muted"]).pack(side="right", padx=(6, 12),
-                                              ipady=4)
+                                   bg=self.t["panel"], fg=self.t["muted"],
+                                   anchor="w")
+        self.next_label.pack(fill="x")
         self._button(self.runner, "  Next  ", self._next_turn,
-                     fg=self.t["crit"]).pack(side="right", ipady=4)
+                     fg=self.t["crit"]).pack(fill="x", ipady=4, pady=(4, 6))
 
     def _toggle_run(self):
         if self.running:
@@ -2831,10 +2902,13 @@ class Encounters:
 
     def _render_runner(self):
         if not self.running:
-            self.runner.grid_remove()
+            self.runner.pack_forget()
             self.run_button.configure(text="Run Encounter", fg=self.t["crit"])
             return
-        self.runner.grid()
+        # Named neighbour rather than first-in-frame: packing it back after
+        # an ended fight has to land above Roll Initiative again, not below
+        # everything that was packed while it was away.
+        self.runner.pack(fill="x", before=self.roll_button)
         self.run_button.configure(text="End Encounter", fg=self.t["fumble"])
         order = self._turn_order()
         if not order:

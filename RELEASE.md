@@ -94,17 +94,19 @@ bars each.
 
 Build a fight and run it, in its own window. A roster on the left, the
 selected creature's stat block on the right, a few lines on what is going on
-and what comes of it underneath, and — once it is running — a turn bar showing
-the round and whose turn it is.
+and what comes of it underneath, and — once it is running — a turn bar at the
+foot of the roster showing the round and whose turn it is.
 
 - **A library per campaign**, sixteen creatures deep to begin with — bat up to
   ogre, each with its ability scores, its attacks and a line on what it is.
   *+ Add creature* turns the roster into the library: click one to look it
   over, set **How many** with the arrows, and *Add 3 x Goblin* puts three in
   and comes straight back. A creature in an encounter is a copy, so wounding
-  the goblin here leaves the library entry untouched, and a second Goblin is
-  named Goblin 2 so the turn order is never ambiguous. *Save to library* keeps
-  one of your own — scores, attacks, description and all.
+  the goblin here leaves the library entry untouched, and two goblins are
+  named Goblin A and Goblin B so the turn order is never ambiguous, while a
+  lone creature and anyone off the map keep the name you gave them.
+  *Save to library* keeps one of your own — scores, attacks, description and
+  all.
 - **Players come off the game map**, each with whoever they belong to and
   their stats brought across, along with anyone at the table who has no
   character yet. Or add one by hand with a name and an initiative bonus.
@@ -221,9 +223,10 @@ Initiative panel and the figures on the map, with nothing joining them up.
 Assemble the room from a per-campaign creature library, pull the players
 straight off the game map with their stats, then roll initiative — a d20
 each, or one d20 for a gang that acts together with everyone still adding
-their own modifier. *Run Encounter* opens a turn bar under the summary:
-the round, whose turn it is, who is next. **Next** hands the turn on and
-lifts that creature to the top of the roster; a full cycle ticks the round.
+their own modifier. *Run Encounter* opens a turn bar at the foot of
+the roster, above *Roll Initiative*: the round, whose turn it is, who is
+next. **Next** hands the turn on and lifts that creature to the top of the
+roster; a full cycle ticks the round.
 
 Every count sits in its own box and can be typed over, so a rolled number is
 only ever a suggestion — overrule one, set a whole room by hand without

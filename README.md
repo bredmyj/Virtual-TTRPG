@@ -258,8 +258,9 @@ title bar shows which one you are in.
 **The roster, on the left.** *Roll Initiative* sits above the two add buttons —
 it is the one you reach for once the room is assembled. A creature in an
 encounter is a copy, so wounding the goblin here never touches the goblin in
-the library. A second Goblin is called Goblin 2, so the turn order is never
-ambiguous.
+the library. Two goblins are called Goblin A and Goblin B, three of them A, B
+and C, so the turn order is never ambiguous. Players keep the name they have
+on the map, and a creature standing on its own is left as you named it.
 
 *+ Add player* offers the characters already standing on the **game map**, each
 with whoever they belong to — *Boon - Marshell* — and brings their stats across.
@@ -374,9 +375,10 @@ setting the fight up, or fill it in once it is won. Both boxes are kept with
 the campaign like everything else.
 
 **Running it.** *Run Encounter* rolls for anyone still without a count and opens
-the turn bar underneath the summary: the round, whose turn it is, and who is up
-next. **Next** hands the turn on and lifts that creature to the top of the
-roster; a full cycle ticks the round over. *End* puts it away.
+the turn bar at the foot of the roster, just above *Roll Initiative*: the
+round, whose turn it is, and who is up next. **Next** sits under the order it
+reads from — it hands the turn on and lifts that creature to the top of the
+roster; a full cycle ticks the round over. *End Encounter* puts it away.
 
 ### Saving an encounter for later
 
