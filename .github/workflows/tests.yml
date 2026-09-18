@@ -1,0 +1,36 @@
+# The rules, checked on every push.
+#
+# Not the windows - those need a screen and a pair of eyes. This runs the
+# parts that are plain Python: the card game's rules and tables, and the
+# naming in Encounters. Both are the kind of thing that breaks quietly and
+# is only noticed a fortnight later in the middle of a session, which is
+# exactly what a minute of CI is for.
+#
+# `compileall` on top of it catches a syntax error in the parts the tests
+# never import, so a window that will not open is caught here rather than
+# on somebody's machine.
+
+name: Tests
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check it all compiles
+        run: python -m compileall -q . -x "dist|build|__pycache__"
+
+      - name: Run the tests
+        run: python -m unittest discover -s tests -v

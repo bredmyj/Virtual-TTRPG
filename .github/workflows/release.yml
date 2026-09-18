@@ -45,6 +45,9 @@ jobs:
       - name: Check it all compiles
         run: python -m compileall -q . -x "dist|build|__pycache__"
 
+      - name: Run the tests
+        run: python -m unittest discover -s tests
+
       - name: Read the version out of paths.py
         id: version
         shell: bash

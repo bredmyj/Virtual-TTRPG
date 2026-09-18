@@ -104,6 +104,16 @@ def setup(api):
 `modifier.py` is a short, working example of a panel plus the `after_roll`
 hook. The bigger bundled mods — `fate_chart.py`, `meaning_tables.py`,
 `encounters.py` and `journal.py` — show the same api used in anger.
+`card_dungeon.py` goes furthest: a whole game in one window, and worth
+reading for how it keeps the rules in a plain-Python `Duel` class that
+has never heard of Tk, with the window only drawing what `Duel` says is
+true. A mod with rules of its own is much easier to get right that way.
+
+That split is what makes a mod testable. `tests/test_rules.py` plays several
+hundred fights against `Duel` without ever opening a window, and does the
+same for the naming in `encounters.py`; run it with `python tests/test_rules.py`
+from the top of the repository. If your mod has rules worth getting right,
+keep them somewhere a test can reach without a screen.
 
 The Roll History and Initiative panels are built in rather than mods (they
 live in `core_panels.py`), so they always load and don't appear in the Mods
