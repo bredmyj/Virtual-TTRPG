@@ -238,6 +238,7 @@ Everything else lives under **Tools**:
 - **Game Map...** — the dungeon (see below)
 - **Adventuring Journal...** — notes, cast and quest threads
 - **Encounters...** — build a fight and run it (see below)
+- **Card Dungeon...** — a deck-building dungeon crawl, with a shop (see below)
 - **Mods...** — turn extras on and off
 
 **Fate Chart** and **Meaning Tables** appear as panels in the main window. The
@@ -506,6 +507,100 @@ not block. What the party has already seen stays on the map but dimmed.
 
 A figure moves up to its **Move** stat, on room floor only — never through a
 wall, never across empty space, and never into a locked room without the key.
+
+---
+
+## Card Dungeon
+
+**Tools → Card Dungeon...** opens it in its own window. Not a table aid — a
+small game, played with a deck you build and pay for.
+
+Four floors, each gated behind the one above it. Pick one, prepare, then
+click your way from room to room. A room opens once the rooms leading to it
+are clear. Some hold a fight, some a toll to pay, some a card or a purse.
+
+### The prep screen
+
+Three tabs, and they are all the same decision: what to walk in with.
+
+**Build the deck.** Ten cards at least, thirty at most, out of your
+collection. Nothing in a deck is used up, so a deck is a choice rather than a
+cost. Save as many as you like by name and load one on the way down.
+
+**Shop.** New stock every time you come back up the stairs. Three commons,
+two uncommons and at most one rare, in limited numbers. The best cards stay
+behind the counter until you have cleared enough floors to be shown them —
+anything that simply draws cards is the last thing to appear, because drawing
+is the strongest thing a card can do in a game where the hand is the clock.
+
+**Sell.** He pays well under half what he charges, so churning the collection
+for gold is a losing trade. He also stops buying at ten cards — that is a
+deck, and gold only comes back up the stairs, so selling below it would
+strand you with nothing to delve with and no way to earn your way out.
+
+The briefing down the left is the important part. **The floor is rolled when
+you sit down to prepare it**, not when you walk in, so the briefing is telling
+you the truth about the floor you are about to enter — which enemies, which
+tolls, and roughly what it is carrying. Backing out and coming back will not
+reroll it, and neither will the shop.
+
+### Rarity, and the trap
+
+**Commons** are weak for their cost, and every one of them can be set face
+down for one action point instead of being played. **Uncommons and rares**
+buy more per point and cannot be set down at all.
+
+That one line is most of the game. A common is never a dead draw — the worst
+it can be is money. It is also the thing you are trying to grow out of. So
+the obvious move, selling your commons to afford the good cards, is the move
+that leaves you holding a hand of expensive cards and no way to pay for any
+of them. A deck wants roughly a third of it settable; take out too much and
+it stops being able to start.
+
+### A turn
+
+Throw whatever you do not want out of your hand, draw back up to five, bank a
+point, then play what you can afford.
+
+The hand is always filled to the same size, so **a card you keep is a card you
+do not draw**. Holding a Parry back through the enemy's turn is never free —
+it costs you whatever you would have drawn over it.
+
+**Action points** persist until something spends them. You bank one a turn
+whatever you drew, Focus banks two, and any common banks one face down. A
+quiet turn early is a big turn later.
+
+**Attacks** land at the end of the turn that played them, all at once,
+against whatever block the other side is standing behind. Block soaks what it
+can and is worn down by what it soaked. Block is worth about half as much
+again as damage, point for point, because it only pays if the blow actually
+comes.
+
+**Quick cards** can be played while the other side is swinging, and their
+damage lands the moment it is played. That is how a fight gets finished
+before the blow arrives — and how a blow you have already seen the number for
+gets blocked after the fact.
+
+### Tolls and hit points
+
+A hazard is paid on arrival, in cards of the type it asks for, out of the
+hand you are about to fight with. Short of the right type and you take the
+damage instead. Either way you go into the fight with what is left, which is
+why the briefing is worth reading. Every card is **might**, **acrobatics** or
+**magic**, and three acrobatics cards in a deck also buy a point of
+initiative.
+
+Hit points are one pool for the whole floor, and nothing gives them back but
+a rest room and the cards you brought. From round 15 of any single fight the
+air goes bad and both sides start taking damage that block cannot stop, so a
+fight neither side can finish ends anyway.
+
+### What you keep
+
+Gold and cards picked up on the way are yours whichever way the delve went —
+dying with a card in your pocket still means you found it. Clearing a floor
+pays a bonus once. Dying costs you the delve and nothing else: the floor is
+gone, a fresh one is rolled next time, and the shop has new stock.
 
 ---
 
